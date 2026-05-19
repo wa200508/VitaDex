@@ -8,6 +8,11 @@
       "type": "TextPrompt",
       "name": "Prompt",
       "pos": [100, 100],
+      "size": [260, 120],
+      "mode": 0,
+      "flags": 0,
+      "order": 0,
+      "properties": {},
       "args": {
         "text": "{{art_prompt}}"
       }
@@ -17,6 +22,11 @@
       "type": "CLIPTextEncode",
       "name": "CLIP Text Encode",
       "pos": [300, 100],
+      "size": [260, 120],
+      "mode": 0,
+      "flags": 0,
+      "order": 1,
+      "properties": {},
       "args": {}
     },
     {
@@ -24,6 +34,11 @@
       "type": "CheckpointLoaderSimple",
       "name": "Load Checkpoint",
       "pos": [100, 300],
+      "size": [260, 120],
+      "mode": 0,
+      "flags": 0,
+      "order": 2,
+      "properties": {},
       "args": {
         "checkpoint": "stable-diffusion-v1-5"
       }
@@ -33,6 +48,11 @@
       "type": "KSampler",
       "name": "Sampler",
       "pos": [500, 180],
+      "size": [260, 140],
+      "mode": 0,
+      "flags": 0,
+      "order": 3,
+      "properties": {},
       "args": {
         "sampler_name": "K_EULER",
         "steps": 28,
@@ -45,6 +65,11 @@
       "type": "VaeDecoder",
       "name": "VAE Decode",
       "pos": [700, 180],
+      "size": [260, 120],
+      "mode": 0,
+      "flags": 0,
+      "order": 4,
+      "properties": {},
       "args": {}
     },
     {
@@ -52,37 +77,22 @@
       "type": "SaveImage",
       "name": "Save Image",
       "pos": [900, 180],
+      "size": [260, 120],
+      "mode": 0,
+      "flags": 0,
+      "order": 5,
+      "properties": {},
       "args": {
         "filename": "outputs/cards/{{name}}.png"
       }
     }
   ],
   "links": [
-    {
-      "id": 0,
-      "source": [0, "prompt"],
-      "destination": [1, "prompt"]
-    },
-    {
-      "id": 1,
-      "source": [1, "conditioning"],
-      "destination": [3, "positive"]
-    },
-    {
-      "id": 2,
-      "source": [2, "model"],
-      "destination": [3, "model"]
-    },
-    {
-      "id": 3,
-      "source": [3, "samples"],
-      "destination": [4, "samples"]
-    },
-    {
-      "id": 4,
-      "source": [4, "image"],
-      "destination": [5, "image"]
-    }
+    [0, "prompt", 1, "prompt"],
+    [1, "conditioning", 3, "positive"],
+    [2, "model", 3, "model"],
+    [3, "samples", 4, "samples"],
+    [4, "image", 5, "images"]
   ],
   "notes": "Use this workflow with a prompt template from OpenWebUI to generate card art assets. Replace {{art_prompt}} and {{name}} with your chosen database entry values."
 }
