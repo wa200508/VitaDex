@@ -1,0 +1,50 @@
+{
+  "name": "VitaDex Playing Card Generator",
+  "type": "ComfyUI_Workflow",
+  "version": "1.0",
+  "nodes": {
+    "prompt": {
+      "type": "TextPrompt",
+      "args": {
+        "text": "{{art_prompt}}"
+      }
+    },
+    "clip": {
+      "type": "CLIPTextEncode",
+      "args": {}
+    },
+    "model": {
+      "type": "CheckpointLoaderSimple",
+      "args": {
+        "checkpoint": "stable-diffusion-v1-5"
+      }
+    },
+    "sampler": {
+      "type": "KSampler",
+      "args": {
+        "sampler_name": "K_EULER",
+        "steps": 28,
+        "cfg_scale": 7.5,
+        "seed": -1
+      }
+    },
+    "vae": {
+      "type": "VaeDecoder",
+      "args": {}
+    },
+    "save": {
+      "type": "SaveImage",
+      "args": {
+        "filename": "outputs/cards/{{name}}.png"
+      }
+    }
+  },
+  "connections": [
+    ["prompt", "clip"],
+    ["clip", "sampler"],
+    ["model", "sampler"],
+    ["sampler", "vae"],
+    ["vae", "save"]
+  ],
+  "notes": "Use this workflow with a prompt template from OpenWebUI to generate card art assets. Replace {{art_prompt}} and {{name}} with your chosen database entry values."
+}

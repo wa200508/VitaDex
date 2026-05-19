@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VitaDex Card Database Entry",
+  "type": "object",
+  "required": [
+    "name",
+    "type",
+    "move_set",
+    "description",
+    "habitat",
+    "environment_role",
+    "art_prompt",
+    "rarity",
+    "image_assets"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Card name or organism name."
+    },
+    "type": {
+      "type": "string",
+      "description": "The organism type, e.g. Bug, Fish, Plant, Reptile."
+    },
+    "move_set": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "A list of descriptive moves or abilities for the organism." 
+    },
+    "description": {
+      "type": "string",
+      "description": "Short flavor text describing the organism and how it fits into its environment."
+    },
+    "habitat": {
+      "type": "string",
+      "description": "Where the organism lives." 
+    },
+    "environment_role": {
+      "type": "string",
+      "description": "How the organism impacts its ecosystem." 
+    },
+    "art_prompt": {
+      "type": "string",
+      "description": "A stable diffusion prompt for generating the card art." 
+    },
+    "rarity": {
+      "type": "string",
+      "description": "Rarity tier such as Common, Uncommon, Rare, or Legendary." 
+    },
+    "image_assets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of generated image filenames or asset references." 
+    },
+    "related_forms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of related organism forms, such as baby/adult or lifecycle stages." 
+    },
+    "lifecycle_stage": {
+      "type": "string",
+      "description": "Lifecycle stage label, e.g. Larva, Juvenile, Adult." 
+    },
+    "group": {
+      "type": "string",
+      "description": "Optional grouping label for related organisms." 
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional author notes or additional metadata." 
+    }
+  }
+}

@@ -9,7 +9,9 @@ VitaDex is a lightweight mobile-first application designed to organize and explo
 
 ## Getting Started
 1. Install dependencies: `pip install -r requirements.txt`
-2. Launch the app: `python main.py`
+2. Download required local models for ComfyUI: `python download_models.py`
+   - If you use private Hugging Face models, set `HUGGINGFACEHUB_API_TOKEN` first.
+3. Launch the app: `python main.py`
 
 ## About
 This repository contains the foundation for VitaDex, including the app entry point and dependency manifest. The main page can be updated with your application description and branding.

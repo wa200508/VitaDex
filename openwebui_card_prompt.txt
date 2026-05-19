@@ -1,0 +1,22 @@
+Use the following JSON schema when generating a new card entry for VitaDex.
+
+Schema fields:
+- name: the organism or card name
+- type: card type (Bug, Fish, Plant, Reptile, etc.)
+- move_set: short descriptive actions or abilities
+- description: a concise environmental description
+- habitat: where this organism lives
+- environment_role: how it fits into the ecosystem
+- art_prompt: a Stable Diffusion prompt for the card art
+- rarity: Common, Uncommon, Rare, Legendary, etc.
+- image_assets: expected image filenames or asset references
+- related_forms: related organism names for lifecycle/family
+- lifecycle_stage: stage label, e.g. Larva, Juvenile, Adult
+- group: associated family/group name
+- notes: optional additional notes
+
+Output only valid JSON matching the schema.
+
+Example prompt:
+"Create a new card entry for a bright forest creature that glows softly at night.
+Use the schema above and include a vivid art_prompt for a collectible card image."
