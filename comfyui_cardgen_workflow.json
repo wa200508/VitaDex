@@ -1,26 +1,38 @@
 {
-  "name": "VitaDex Playing Card Generator",
-  "type": "ComfyUI_Workflow",
-  "version": "1.0",
-  "nodes": {
-    "prompt": {
+  "version": 1,
+  "last_node_id": 5,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 0,
       "type": "TextPrompt",
+      "name": "Prompt",
+      "pos": [100, 100],
       "args": {
         "text": "{{art_prompt}}"
       }
     },
-    "clip": {
+    {
+      "id": 1,
       "type": "CLIPTextEncode",
+      "name": "CLIP Text Encode",
+      "pos": [300, 100],
       "args": {}
     },
-    "model": {
+    {
+      "id": 2,
       "type": "CheckpointLoaderSimple",
+      "name": "Load Checkpoint",
+      "pos": [100, 300],
       "args": {
         "checkpoint": "stable-diffusion-v1-5"
       }
     },
-    "sampler": {
+    {
+      "id": 3,
       "type": "KSampler",
+      "name": "Sampler",
+      "pos": [500, 180],
       "args": {
         "sampler_name": "K_EULER",
         "steps": 28,
@@ -28,23 +40,49 @@
         "seed": -1
       }
     },
-    "vae": {
+    {
+      "id": 4,
       "type": "VaeDecoder",
+      "name": "VAE Decode",
+      "pos": [700, 180],
       "args": {}
     },
-    "save": {
+    {
+      "id": 5,
       "type": "SaveImage",
+      "name": "Save Image",
+      "pos": [900, 180],
       "args": {
         "filename": "outputs/cards/{{name}}.png"
       }
     }
-  },
-  "connections": [
-    ["prompt", "clip"],
-    ["clip", "sampler"],
-    ["model", "sampler"],
-    ["sampler", "vae"],
-    ["vae", "save"]
+  ],
+  "links": [
+    {
+      "id": 0,
+      "source": [0, "prompt"],
+      "destination": [1, "prompt"]
+    },
+    {
+      "id": 1,
+      "source": [1, "conditioning"],
+      "destination": [3, "positive"]
+    },
+    {
+      "id": 2,
+      "source": [2, "model"],
+      "destination": [3, "model"]
+    },
+    {
+      "id": 3,
+      "source": [3, "samples"],
+      "destination": [4, "samples"]
+    },
+    {
+      "id": 4,
+      "source": [4, "image"],
+      "destination": [5, "image"]
+    }
   ],
   "notes": "Use this workflow with a prompt template from OpenWebUI to generate card art assets. Replace {{art_prompt}} and {{name}} with your chosen database entry values."
 }
