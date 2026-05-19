@@ -20,7 +20,6 @@ def build_wrapped_label(text, font_size='18sp', height=140):
     label = Label(
         text=text,
         font_size=font_size,
-        font_name='Arial',
         color=(1, 1, 1, 1),
         halign='center',
         valign='middle',
@@ -57,7 +56,6 @@ class OutlineButton(Button):
         kwargs.setdefault('background_normal', '')
         kwargs.setdefault('background_color', (0, 0, 0, 0))
         kwargs.setdefault('color', (1, 1, 1, 1))
-        kwargs.setdefault('font_name', 'Arial')
         kwargs.setdefault('font_size', '20sp')
         kwargs.setdefault('bold', True)
         super().__init__(**kwargs)
@@ -92,7 +90,6 @@ class HomeScreen(Screen):
 
         layout.add_widget(Label(
             text='VitaDex',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='36sp',
             bold=True,
@@ -129,7 +126,6 @@ class HomeScreen(Screen):
         feature_box = BoxLayout(orientation='vertical', spacing=10)
         feature_box.add_widget(Label(
             text='• Easy scan flow for kids and grown-ups',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -140,7 +136,6 @@ class HomeScreen(Screen):
         ))
         feature_box.add_widget(Label(
             text='• Cards appear automatically after each scan',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -151,7 +146,6 @@ class HomeScreen(Screen):
         ))
         feature_box.add_widget(Label(
             text='• Black background, white text, and clear outlines for readability',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -192,7 +186,6 @@ class ScanScreen(Screen):
 
         layout.add_widget(Label(
             text='Scan',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='28sp',
             size_hint=(1, None),
@@ -253,7 +246,6 @@ class ScanScreen(Screen):
 
         card_box.add_widget(Label(
             text='New card added!',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='22sp',
             size_hint=(1, None),
@@ -264,7 +256,6 @@ class ScanScreen(Screen):
         ))
         card_box.add_widget(Label(
             text=card.card_art,
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='48sp',
             size_hint=(1, None),
@@ -275,7 +266,6 @@ class ScanScreen(Screen):
         ))
         card_box.add_widget(Label(
             text=card.entry.name,
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='24sp',
             bold=True,
@@ -287,7 +277,6 @@ class ScanScreen(Screen):
         ))
         card_box.add_widget(Label(
             text=f'{card.entry.type} • {card.entry.rarity}',
-            font_name='Arial',
             color=(0.7, 0.85, 1, 1),
             font_size='16sp',
             size_hint=(1, None),
@@ -326,7 +315,6 @@ class CardBookScreen(Screen):
 
         layout.add_widget(Label(
             text='Card Book',
-            font_name='Arial',
             color=(1, 1, 1, 1),
             font_size='28sp',
             size_hint=(1, None),
@@ -378,7 +366,6 @@ class CardBookScreen(Screen):
         if app.new_cards:
             self.new_stack_area.add_widget(Label(
                 text=f'{len(app.new_cards)} new cards collected today',
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='18sp',
                 size_hint=(1, None),
@@ -409,7 +396,6 @@ class CardBookScreen(Screen):
                 preview.bind(pos=update_preview, size=update_preview)
                 preview.add_widget(Label(
                     text=card.card_art,
-                    font_name='Arial',
                     color=(1, 1, 1, 1),
                     font_size='34sp',
                     size_hint=(1, None),
@@ -421,7 +407,6 @@ class CardBookScreen(Screen):
                 ))
                 preview.add_widget(Label(
                     text=card.entry.name,
-                    font_name='Arial',
                     color=(0.9, 0.95, 1, 1),
                     font_size='14sp',
                     size_hint=(1, None),
@@ -435,7 +420,6 @@ class CardBookScreen(Screen):
         else:
             self.new_stack_area.add_widget(Label(
                 text='No new cards to put away yet.',
-                font_name='Arial',
                 color=(0.8, 0.9, 1, 1),
                 font_size='16sp',
                 size_hint=(1, None),
@@ -450,7 +434,6 @@ class CardBookScreen(Screen):
         if not self.cards:
             self.card_list.add_widget(Label(
                 text='No cards yet. Scan a creature to add cards to your collection.',
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='16sp',
                 halign='center',
@@ -465,7 +448,6 @@ class CardBookScreen(Screen):
             card_box = styled_layout(BoxLayout(orientation='vertical', padding=12, spacing=8, size_hint=(1, None), height=300))
             card_box.add_widget(Label(
                 text=card.card_art,
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='38sp',
                 size_hint=(1, None),
@@ -476,7 +458,6 @@ class CardBookScreen(Screen):
             ))
             card_box.add_widget(Label(
                 text=card.entry.name,
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='18sp',
                 bold=True,
@@ -494,7 +475,6 @@ class CardBookScreen(Screen):
             if rel_line:
                 card_box.add_widget(Label(
                     text=' • '.join(rel_line),
-                    font_name='Arial',
                     color=(0.7, 0.85, 1, 1),
                     font_size='13sp',
                     size_hint=(1, None),
@@ -505,7 +485,6 @@ class CardBookScreen(Screen):
                 ))
             card_box.add_widget(Label(
                 text=f'{card.entry.type} • {card.entry.rarity}',
-                font_name='Arial',
                 color=(0.8, 0.9, 1, 1),
                 font_size='14sp',
                 size_hint=(1, None),
@@ -516,7 +495,6 @@ class CardBookScreen(Screen):
             ))
             card_box.add_widget(Label(
                 text=f'Moves: {", ".join(card.entry.move_set)}',
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='13sp',
                 halign='left',
@@ -527,7 +505,6 @@ class CardBookScreen(Screen):
             ))
             card_box.add_widget(Label(
                 text=card.entry.description,
-                font_name='Arial',
                 color=(1, 1, 1, 1),
                 font_size='13sp',
                 halign='left',
@@ -539,7 +516,6 @@ class CardBookScreen(Screen):
             if card.entry.related_forms:
                 card_box.add_widget(Label(
                     text=f'Related: {", ".join(card.entry.related_forms)}',
-                    font_name='Arial',
                     color=(0.7, 0.85, 1, 1),
                     font_size='12sp',
                     italic=True,
@@ -551,7 +527,6 @@ class CardBookScreen(Screen):
                 ))
             card_box.add_widget(Label(
                 text=f'Habitat: {card.entry.habitat}',
-                font_name='Arial',
                 color=(0.7, 0.85, 1, 1),
                 font_size='12sp',
                 italic=True,
