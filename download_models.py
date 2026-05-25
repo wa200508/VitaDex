@@ -19,7 +19,7 @@ def find_checkpoint_models(workflow):
 
 def main():
     parser = argparse.ArgumentParser(description='Download ComfyUI model checkpoints used by the VitaDex workflow.')
-    parser.add_argument('--workflow', default='comfyui_cardgen_workflow.json', help='Path to ComfyUI workflow JSON file.')
+    parser.add_argument('--workflow', default='card_generation/workflow_api.json', help='Path to ComfyUI workflow JSON file.')
     parser.add_argument('--model-dir', default='models', help='Local base directory for downloaded models.')
     parser.add_argument('--use-safetensors', action='store_true', help='Prefer safetensors if available.')
     parser.add_argument('--revision', default=None, help='Hugging Face model revision to download.')
@@ -32,7 +32,10 @@ def main():
 
     workflow_path = Path(args.workflow)
     if not workflow_path.exists():
-        raise SystemExit(f'Workflow file not found: {workflow_path}')
+        raise SystemExit(
+            f'Workflow file not found: {workflow_path}.\n'
+            'Provide a valid `--workflow` path to a ComfyUI workflow JSON file.'
+        )
 
     workflow = load_workflow(workflow_path)
     models = list(dict.fromkeys(find_checkpoint_models(workflow)))

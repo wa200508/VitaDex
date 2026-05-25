@@ -10,7 +10,7 @@ class OrganismEntry:
     description: str
     habitat: str
     environment_role: str
-    art: str
+    art_prompt: str
     rarity: str
     image_assets: List[str]
     related_forms: List[str] = field(default_factory=list)
@@ -27,7 +27,7 @@ DATABASE = [
         description='A small forest crawler that lights up mossy paths and helps break down fallen leaves.',
         habitat='Mossy forest floors, damp clearings, and shaded wetlands',
         environment_role='Pollinator and decomposer contributing to forest health',
-        art='🪲💚',
+        art_prompt='A tiny glowing beetle perched on a mossy leaf, soft bioluminescent light, collectible card illustration',
         rarity='Common',
         image_assets=['🪲💚', '🍃✨', '🌿🪲'],
         group='Glowleaf Beetle Family',
@@ -42,7 +42,7 @@ DATABASE = [
         description='A fast-moving water creature that darts through stream pools and helps keep currents clean.',
         habitat='Freshwater streams, ponds, and slow rivers',
         environment_role='Water cleaner and algae balancer for healthy waterways',
-        art='🐟💧',
+        art_prompt='A swift silver fish in a clear stream, shimmering water reflections, collectible card art',
         rarity='Uncommon',
         image_assets=['🐟💧', '💦🌊', '🌿🐟'],
         group='Streamfin Species',
@@ -57,7 +57,7 @@ DATABASE = [
         description='A bright, cheerful plant that opens in sunlight and provides food and shelter to small wildlife.',
         habitat='Sunny meadows, hillsides, and garden edges',
         environment_role='Food source and nesting cover for insects and small animals',
-        art='🌼☀️',
+        art_prompt='A bright sunflower-like sprout glowing in golden hour light, cheerful collectible card art',
         rarity='Rare',
         image_assets=['🌼☀️', '🌻✨', '🌿🌞'],
         group='Sunflare Plants',
@@ -72,7 +72,7 @@ DATABASE = [
         description='The juvenile form of Glowleaf Beetle, found in damp leaf litter where it feeds and grows safely.',
         habitat='Leaf litter and rotten logs in shaded forests',
         environment_role='Early-stage decomposer and nutrient recycler',
-        art='🐛✨',
+        art_prompt='A soft-bodied larva curled in leaf litter, gentle glowing light, collectible card illustration',
         rarity='Common',
         image_assets=['🐛✨', '🍂🐛'],
         group='Glowleaf Beetle Family',
@@ -86,7 +86,7 @@ DATABASE = [
         description='A young streamfin that stays near the shallows while it grows stronger and learns to navigate currents.',
         habitat='Shallow stream edges and quiet backwaters',
         environment_role='Juvenile cleaner helping maintain healthy stream surfaces',
-        art='🐟🫧',
+        art_prompt='A small baby fish near a stream edge, subtle ripples, collectible card art',
         rarity='Common',
         image_assets=['🐟🫧', '🌊🐟'],
         group='Streamfin Species',
@@ -100,7 +100,7 @@ DATABASE = [
         description='A young Sunflare plant that begins its life sheltered in tall grass before opening to the sun.',
         habitat='Seedling patches in sunny meadows',
         environment_role='Early growth stage that prepares the ground for adult plant communities',
-        art='🌱☀️',
+        art_prompt='A tiny green seedling reaching toward the sun, soft meadow background, collectible card art',
         rarity='Uncommon',
         image_assets=['🌱☀️', '🌿🌻'],
         group='Sunflare Plants',
