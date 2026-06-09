@@ -483,7 +483,9 @@ class ScanScreen(Screen):
             self.manager.transition = SlideTransition(direction='right')
             self.manager.current = 'home'
 
-        Animation(pos=(Window.width * 0.15, 32), size=(70, 40), opacity=0, d=0.35).bind(on_complete=on_shrink_complete).start(preview)
+        shrink_anim = Animation(pos=(Window.width * 0.15, 32), size=(70, 40), opacity=0, d=0.35)
+        shrink_anim.bind(on_complete=on_shrink_complete)
+        shrink_anim.start(preview)
 
     def goto_home(self, _=None):
         self.manager.transition = SlideTransition(direction='right')
