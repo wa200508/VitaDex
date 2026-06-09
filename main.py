@@ -1,4 +1,5 @@
 import random
+import time
 
 from kivy.animation import Animation
 from kivy.app import App
@@ -169,6 +170,8 @@ class CardDetailView(ButtonBehavior, BoxLayout):
         super().__init__(**kwargs)
         self.on_tap = on_tap
         self.card = None
+        self.last_touch_time = 0
+        self.double_tap_threshold = 0.3
         with self.canvas.before:
             Color(0.06, 0.1, 0.18, 0.96)
             self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[24])
@@ -244,9 +247,41 @@ class CardDetailView(ButtonBehavior, BoxLayout):
             f'Notes: {card.organism.notes or "None"}'
         )
 
+    def _close_fullscreen(self):
+        app = App.get_running_app()
+        if hasattr(app, 'fullscreen_popup') and app.fullscreen_popup:
+            app.fullscreen_popup.dismiss()
+            app.fullscreen_popup = None
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self.touch_start_pos = touch.pos
+            return super().on_touch_down(touch)
+        return super().on_touch_down(touch)
+
+    def on_touch_up(self, touch):
+        if self.collide_point(*touch.pos):
+            # Check for swipe (>60px movement)
+            if hasattr(self, 'touch_start_pos'):
+                dx = touch.x - self.touch_start_pos[0]
+                dy = touch.y - self.touch_start_pos[1]
+                distance = (dx**2 + dy**2) ** 0.5
+                if distance > 60:
+                    self._close_fullscreen()
+                    return True
+        return super().on_touch_up(touch)
+
     def on_release(self):
-        if self.card and self.on_tap:
-            self.on_tap(self.card)
+        if self.card:
+            current_time = time.time()
+            if current_time - self.last_touch_time < self.double_tap_threshold:
+                # Double tap - close fullscreen
+                self._close_fullscreen()
+            else:
+                # Single tap - open fullscreen
+                if self.on_tap:
+                    self.on_tap(self.card)
+            self.last_touch_time = current_time
 
 
 class HomeScreen(Screen):
@@ -514,21 +549,6 @@ class CardBookScreen(Screen):
         self.selected_card_index = 0
         layout.add_widget(self.new_stack_area)
 
-        control_row = BoxLayout(size_hint=(1, None), height=64, spacing=10)
-        control_row.add_widget(OutlineButton(
-            text='Put away new cards',
-            size_hint=(1, None),
-            height=64,
-            on_release=self.put_away_cards,
-        ))
-        control_row.add_widget(OutlineButton(
-            text='Organize by type',
-            size_hint=(1, None),
-            height=64,
-            on_release=self.sort_by_type,
-        ))
-        layout.add_widget(control_row)
-
         self.card_area = FloatLayout(size_hint=(1, 1))
         self.stack_area = FloatLayout(size_hint=(None, None), size=(180, 260), pos=(18, 20))
         self.card_area.add_widget(self.stack_area)
@@ -575,11 +595,10 @@ class CardBookScreen(Screen):
         detail = CardDetailView(size_hint=(1, 1))
         detail.set_card(card)
         content.add_widget(detail)
-        close_button = OutlineButton(text='Close', size_hint=(1, None), height=56)
         popup = Popup(title=card.title, content=content, size_hint=(0.96, 0.96), auto_dismiss=True)
-        close_button.bind(on_release=lambda *_: popup.dismiss())
-        content.add_widget(close_button)
         popup.open()
+        app = App.get_running_app()
+        app.fullscreen_popup = popup
 
     def refresh_cards(self):
         app = App.get_running_app()
@@ -700,6 +719,7 @@ class VitaDexApp(App):
         Window.clearcolor = (0, 0, 0, 1)
         self.cards = []
         self.new_cards = []
+        self.fullscreen_popup = None
         self.home_screen = HomeScreen()
         self.scan_screen = ScanScreen()
         self.card_book_screen = CardBookScreen()
