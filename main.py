@@ -56,17 +56,16 @@ class OutlineButton(Button):
         kwargs.setdefault('background_normal', '')
         kwargs.setdefault('background_color', (0, 0, 0, 0))
         kwargs.setdefault('color', (1, 1, 1, 1))
-        kwargs.setdefault('font_size', '20sp')
+        kwargs.setdefault('font_size', '16sp')
         kwargs.setdefault('bold', True)
+        kwargs.setdefault('markup', False)
+        kwargs.setdefault('padding', (16, 12))
         super().__init__(**kwargs)
         with self.canvas.before:
-            Color(0.05, 0.1, 0.2, 0.9)
-            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[24])
-            Color(0.4, 0.75, 1, 0.35)
-            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 24), width=1.5)
-        with self.canvas.after:
-            Color(1, 1, 1, 0.08)
-            self._glow = RoundedRectangle(pos=(self.x + 12, self.y + self.height * 0.55), size=(self.width * 0.5, self.height * 0.22), radius=[18])
+            Color(0.05, 0.1, 0.2, 0.95)
+            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[20])
+            Color(0.3, 0.6, 0.92, 0.35)
+            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=1.4)
         self.bind(pos=self.update_graphics, size=self.update_graphics)
 
     def update_graphics(self, *args):
@@ -100,17 +99,17 @@ class HomeScreen(Screen):
             height=140,
         ))
 
-        button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=200, spacing=14)
+        button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=170, spacing=12)
         button_layout.add_widget(OutlineButton(
-            text='🔍 Start Scan',
+            text='Start Scan',
             size_hint=(1, None),
-            height=88,
+            height=72,
             on_release=self.goto_scan,
         ))
         self.collection_button = OutlineButton(
-            text='📒 Card Book',
+            text='Card Book',
             size_hint=(1, None),
-            height=88,
+            height=72,
             on_release=self.goto_card_book,
         )
         button_layout.add_widget(self.collection_button)
@@ -160,9 +159,9 @@ class HomeScreen(Screen):
         app = App.get_running_app()
         count = len(getattr(app, 'new_cards', []))
         if count:
-            self.collection_button.text = f'📒 Card Book  •  {count} new'
+            self.collection_button.text = f'Card Book  •  {count} new'
         else:
-            self.collection_button.text = '📒 Card Book'
+            self.collection_button.text = 'Card Book'
 
     def goto_scan(self, _=None):
         self.manager.transition = SlideTransition(direction='left')
@@ -197,15 +196,15 @@ class ScanScreen(Screen):
         ))
 
         layout.add_widget(OutlineButton(
-            text='🔍 Scan Now',
+            text='Scan Now',
             size_hint=(1, None),
-            height=84,
+            height=68,
             on_release=self.perform_scan,
         ))
         layout.add_widget(OutlineButton(
-            text='🏠 Back to Home',
+            text='Back to Home',
             size_hint=(1, None),
-            height=84,
+            height=68,
             on_release=self.goto_home,
         ))
         self.add_widget(layout)
@@ -321,19 +320,17 @@ class CardBookScreen(Screen):
         self.new_stack_area = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, None), height=180)
         layout.add_widget(self.new_stack_area)
 
-        control_row = BoxLayout(size_hint=(1, None), height=70, spacing=10)
+        control_row = BoxLayout(size_hint=(1, None), height=64, spacing=10)
         control_row.add_widget(OutlineButton(
-            text='📥 Put away new cards',
-            font_size='18sp',
+            text='Put away new cards',
             size_hint=(1, None),
-            height=70,
+            height=64,
             on_release=self.put_away_cards,
         ))
         control_row.add_widget(OutlineButton(
-            text='🧩 Organize by type',
-            font_size='18sp',
+            text='Organize by type',
             size_hint=(1, None),
-            height=70,
+            height=64,
             on_release=self.sort_by_type,
         ))
         layout.add_widget(control_row)
@@ -345,10 +342,10 @@ class CardBookScreen(Screen):
 
         layout.add_widget(self.scroll_view)
         layout.add_widget(OutlineButton(
-            text='🏠 Back to Home',
-            font_size='22sp',
+            text='Back to Home',
+            font_size='20sp',
             size_hint=(1, None),
-            height=84,
+            height=72,
             on_release=self.goto_home,
         ))
         self.add_widget(layout)

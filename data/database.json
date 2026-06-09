@@ -4,7 +4,7 @@
       "id": "forest_emerald",
       "name": "Forest Glow",
       "style": "emerald",
-      "preview": "🌿",
+      "preview": "Forest",
       "tags": ["Bug", "Plant", "Forest"],
       "description": "A soft green card background with forest leaf textures and glow accents."
     },
@@ -12,7 +12,7 @@
       "id": "stream_splash",
       "name": "Stream Splash",
       "style": "blue",
-      "preview": "💧",
+      "preview": "Stream",
       "tags": ["Fish", "Water", "Freshwater"],
       "description": "A cool blue water card backdrop with subtle current lines and splash details."
     },
@@ -20,7 +20,7 @@
       "id": "sunshine_halo",
       "name": "Sunshine Halo",
       "style": "gold",
-      "preview": "☀️",
+      "preview": "Sun",
       "tags": ["Plant", "Meadow", "Sun"],
       "description": "A bright golden card frame with warm sun flares and floral highlights."
     }
@@ -90,27 +90,27 @@
       "organism_name": "Glowleaf Beetle",
       "prompt": "A tiny glowing beetle perched on a mossy leaf, soft bioluminescent light, collectible card illustration",
       "assets": [
-        "🪲💚",
-        "🍃✨",
-        "🌿🪲"
+        "Glowleaf Art 1",
+        "Glowleaf Art 2",
+        "Glowleaf Art 3"
       ]
     },
     {
       "organism_name": "Streamfin Dart",
       "prompt": "A swift silver fish in a clear stream, shimmering water reflections, collectible card art",
       "assets": [
-        "🐟💧",
-        "💦🌊",
-        "🌿🐟"
+        "Streamfin Art 1",
+        "Streamfin Art 2",
+        "Streamfin Art 3"
       ]
     },
     {
       "organism_name": "Sunflare Sprout",
       "prompt": "A bright sunflower-like sprout glowing in golden hour light, cheerful collectible card art",
       "assets": [
-        "🌼☀️",
-        "🌻✨",
-        "🌿🌞"
+        "Sunflare Art 1",
+        "Sunflare Art 2",
+        "Sunflare Art 3"
       ]
     }
   ]
