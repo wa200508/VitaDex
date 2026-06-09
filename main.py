@@ -13,7 +13,7 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
 
-from database import DATABASE
+from database import CARD_DB
 
 
 def build_wrapped_label(text, font_size='18sp', height=140):
@@ -75,12 +75,6 @@ class OutlineButton(Button):
         self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 24)
         self._glow.pos = (self.x + 12, self.y + self.height * 0.55)
         self._glow.size = (self.width * 0.5, self.height * 0.22)
-
-
-class Card:
-    def __init__(self, entry):
-        self.entry = entry
-        self.card_art = random.choice(entry.image_assets) if entry.image_assets else entry.art
 
 
 class HomeScreen(Screen):
@@ -218,8 +212,8 @@ class ScanScreen(Screen):
 
     def perform_scan(self, _=None):
         app = App.get_running_app()
-        entry = random.choice(DATABASE)
-        card = Card(entry)
+        organism = CARD_DB.get_random_organism()
+        card = CARD_DB.build_card(organism)
         app.cards.append(card)
         app.new_cards.append(card)
         app.card_book_screen.add_card(card)
@@ -245,7 +239,7 @@ class ScanScreen(Screen):
         card_box.bind(pos=update_box, size=update_box)
 
         card_box.add_widget(Label(
-            text='New card added!',
+            text='New card created!',
             color=(1, 1, 1, 1),
             font_size='22sp',
             size_hint=(1, None),
@@ -255,7 +249,7 @@ class ScanScreen(Screen):
             text_size=(Window.width * 0.8 - 40, None),
         ))
         card_box.add_widget(Label(
-            text=card.card_art,
+            text=card.background.preview,
             color=(1, 1, 1, 1),
             font_size='48sp',
             size_hint=(1, None),
@@ -265,7 +259,7 @@ class ScanScreen(Screen):
             text_size=(Window.width * 0.8 - 40, None),
         ))
         card_box.add_widget(Label(
-            text=card.entry.name,
+            text=card.title,
             color=(1, 1, 1, 1),
             font_size='24sp',
             bold=True,
@@ -276,7 +270,7 @@ class ScanScreen(Screen):
             text_size=(Window.width * 0.8 - 40, None),
         ))
         card_box.add_widget(Label(
-            text=f'{card.entry.type} • {card.entry.rarity}',
+            text=f'{card.organism.type} • {card.organism.rarity} • {card.background.name}',
             color=(0.7, 0.85, 1, 1),
             font_size='16sp',
             size_hint=(1, None),
@@ -406,7 +400,7 @@ class CardBookScreen(Screen):
                     text_size=(preview.width, None),
                 ))
                 preview.add_widget(Label(
-                    text=card.entry.name,
+                    text=card.title,
                     color=(0.9, 0.95, 1, 1),
                     font_size='14sp',
                     size_hint=(1, None),
@@ -445,9 +439,9 @@ class CardBookScreen(Screen):
             return
 
         for card in reversed(self.cards):
-            card_box = styled_layout(BoxLayout(orientation='vertical', padding=12, spacing=8, size_hint=(1, None), height=300))
+            card_box = styled_layout(BoxLayout(orientation='vertical', padding=12, spacing=8, size_hint=(1, None), height=330))
             card_box.add_widget(Label(
-                text=card.card_art,
+                text=card.background.preview,
                 color=(1, 1, 1, 1),
                 font_size='38sp',
                 size_hint=(1, None),
@@ -457,7 +451,7 @@ class CardBookScreen(Screen):
                 text_size=(Window.width / 2 - 40, None),
             ))
             card_box.add_widget(Label(
-                text=card.entry.name,
+                text=card.title,
                 color=(1, 1, 1, 1),
                 font_size='18sp',
                 bold=True,
@@ -468,10 +462,10 @@ class CardBookScreen(Screen):
                 text_size=(Window.width / 2 - 40, None),
             ))
             rel_line = []
-            if card.entry.lifecycle_stage:
-                rel_line.append(card.entry.lifecycle_stage)
-            if card.entry.group:
-                rel_line.append(card.entry.group)
+            if card.organism.lifecycle_stage:
+                rel_line.append(card.organism.lifecycle_stage)
+            if card.organism.group:
+                rel_line.append(card.organism.group)
             if rel_line:
                 card_box.add_widget(Label(
                     text=' • '.join(rel_line),
@@ -484,7 +478,7 @@ class CardBookScreen(Screen):
                     text_size=(Window.width / 2 - 40, None),
                 ))
             card_box.add_widget(Label(
-                text=f'{card.entry.type} • {card.entry.rarity}',
+                text=f'{card.organism.type} • {card.organism.rarity} • {card.background.name}',
                 color=(0.8, 0.9, 1, 1),
                 font_size='14sp',
                 size_hint=(1, None),
@@ -494,7 +488,7 @@ class CardBookScreen(Screen):
                 text_size=(Window.width / 2 - 40, None),
             ))
             card_box.add_widget(Label(
-                text=f'Moves: {", ".join(card.entry.move_set)}',
+                text=f'Moves: {", ".join(card.selected_moves)}',
                 color=(1, 1, 1, 1),
                 font_size='13sp',
                 halign='left',
@@ -504,7 +498,7 @@ class CardBookScreen(Screen):
                 text_size=(Window.width / 2 - 40, None),
             ))
             card_box.add_widget(Label(
-                text=card.entry.description,
+                text=card.organism.description,
                 color=(1, 1, 1, 1),
                 font_size='13sp',
                 halign='left',
@@ -513,9 +507,9 @@ class CardBookScreen(Screen):
                 height=58,
                 text_size=(Window.width / 2 - 40, None),
             ))
-            if card.entry.related_forms:
+            if card.organism.related_forms:
                 card_box.add_widget(Label(
-                    text=f'Related: {", ".join(card.entry.related_forms)}',
+                    text=f'Related: {", ".join(card.organism.related_forms)}',
                     color=(0.7, 0.85, 1, 1),
                     font_size='12sp',
                     italic=True,
@@ -526,7 +520,7 @@ class CardBookScreen(Screen):
                     text_size=(Window.width / 2 - 40, None),
                 ))
             card_box.add_widget(Label(
-                text=f'Habitat: {card.entry.habitat}',
+                text=f'Habitat: {card.selected_details["Habitat"]}',
                 color=(0.7, 0.85, 1, 1),
                 font_size='12sp',
                 italic=True,
@@ -536,6 +530,29 @@ class CardBookScreen(Screen):
                 valign='middle',
                 text_size=(Window.width / 2 - 40, None),
             ))
+            card_box.add_widget(Label(
+                text=f'Size: {card.selected_details["Size"]}',
+                color=(0.7, 0.85, 1, 1),
+                font_size='12sp',
+                italic=True,
+                size_hint=(1, None),
+                height=24,
+                halign='left',
+                valign='middle',
+                text_size=(Window.width / 2 - 40, None),
+            ))
+            if card.organism.notes:
+                card_box.add_widget(Label(
+                    text=f'Notes: {card.organism.notes}',
+                    color=(0.7, 0.85, 1, 1),
+                    font_size='11sp',
+                    italic=True,
+                    size_hint=(1, None),
+                    height=26,
+                    halign='left',
+                    valign='middle',
+                    text_size=(Window.width / 2 - 40, None),
+                ))
             for child in card_box.children:
                 if isinstance(child, Label):
                     child.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
@@ -551,11 +568,11 @@ class CardBookScreen(Screen):
         app.home_screen.update_new_card_badge()
 
     def auto_organize(self, _=None):
-        self.cards.sort(key=lambda card: (card.entry.rarity, card.entry.name))
+        self.cards.sort(key=lambda card: (card.organism.rarity, card.organism.name))
         self.refresh_cards()
 
     def sort_by_type(self, _=None):
-        self.cards.sort(key=lambda card: (card.entry.type, card.entry.name))
+        self.cards.sort(key=lambda card: (card.organism.type, card.organism.name))
         self.refresh_cards()
 
     def goto_home(self, _=None):

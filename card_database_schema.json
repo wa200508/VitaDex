@@ -1,73 +1,71 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "VitaDex Card Database Entry",
+  "title": "VitaDex Card Database",
   "type": "object",
   "required": [
-    "name",
-    "type",
-    "move_set",
-    "description",
-    "habitat",
-    "environment_role",
-    "art_prompt",
-    "rarity",
-    "image_assets"
+    "background_templates",
+    "organisms",
+    "art_assets"
   ],
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "Card name or organism name."
-    },
-    "type": {
-      "type": "string",
-      "description": "The organism type, e.g. Bug, Fish, Plant, Reptile."
-    },
-    "move_set": {
+    "background_templates": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "A list of descriptive moves or abilities for the organism." 
+      "description": "Available card background templates.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "style", "preview"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "style": { "type": "string" },
+          "preview": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "description": { "type": "string" }
+        }
+      }
     },
-    "description": {
-      "type": "string",
-      "description": "Short flavor text describing the organism and how it fits into its environment."
-    },
-    "habitat": {
-      "type": "string",
-      "description": "Where the organism lives." 
-    },
-    "environment_role": {
-      "type": "string",
-      "description": "How the organism impacts its ecosystem." 
-    },
-    "art_prompt": {
-      "type": "string",
-      "description": "A stable diffusion prompt for generating the card art." 
-    },
-    "rarity": {
-      "type": "string",
-      "description": "Rarity tier such as Common, Uncommon, Rare, or Legendary." 
-    },
-    "image_assets": {
+    "organisms": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "List of generated image filenames or asset references." 
+      "description": "Organism entries for dynamic card generation.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "description",
+          "habitat",
+          "environment_role",
+          "rarity"
+        ],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "move_set": { "type": "array", "items": { "type": "string" } },
+          "description": { "type": "string" },
+          "habitat": { "type": "string" },
+          "habitat_type": { "type": "string" },
+          "environment_role": { "type": "string" },
+          "physical_dimensions": { "type": "string" },
+          "rarity": { "type": "string" },
+          "related_forms": { "type": "array", "items": { "type": "string" } },
+          "lifecycle_stage": { "type": "string" },
+          "group": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
     },
-    "related_forms": {
+    "art_assets": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Names of related organism forms, such as baby/adult or lifecycle stages." 
-    },
-    "lifecycle_stage": {
-      "type": "string",
-      "description": "Lifecycle stage label, e.g. Larva, Juvenile, Adult." 
-    },
-    "group": {
-      "type": "string",
-      "description": "Optional grouping label for related organisms." 
-    },
-    "notes": {
-      "type": "string",
-      "description": "Optional author notes or additional metadata." 
+      "description": "Art prompts and image references associated with organisms.",
+      "items": {
+        "type": "object",
+        "required": ["organism_name", "prompt", "assets"],
+        "properties": {
+          "organism_name": { "type": "string" },
+          "prompt": { "type": "string" },
+          "assets": { "type": "array", "items": { "type": "string" } }
+        }
+      }
     }
   }
 }

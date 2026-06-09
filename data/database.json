@@ -1,0 +1,117 @@
+{
+  "background_templates": [
+    {
+      "id": "forest_emerald",
+      "name": "Forest Glow",
+      "style": "emerald",
+      "preview": "🌿",
+      "tags": ["Bug", "Plant", "Forest"],
+      "description": "A soft green card background with forest leaf textures and glow accents."
+    },
+    {
+      "id": "stream_splash",
+      "name": "Stream Splash",
+      "style": "blue",
+      "preview": "💧",
+      "tags": ["Fish", "Water", "Freshwater"],
+      "description": "A cool blue water card backdrop with subtle current lines and splash details."
+    },
+    {
+      "id": "sunshine_halo",
+      "name": "Sunshine Halo",
+      "style": "gold",
+      "preview": "☀️",
+      "tags": ["Plant", "Meadow", "Sun"],
+      "description": "A bright golden card frame with warm sun flares and floral highlights."
+    }
+  ],
+  "organisms": [
+    {
+      "name": "Glowleaf Beetle",
+      "type": "Bug",
+      "move_set": [
+        "Leaf Glow",
+        "Sticky Climb",
+        "Camouflage Drift",
+        "Moss Spark"
+      ],
+      "description": "A small forest crawler that lights up mossy paths and helps break down fallen leaves.",
+      "habitat": "Mossy forest floors, damp clearings, and shaded wetlands",
+      "habitat_type": "Forest",
+      "environment_role": "Pollinator and decomposer contributing to forest health",
+      "physical_dimensions": "3 cm long",
+      "rarity": "Common",
+      "related_forms": ["Glowleaf Larva", "Glowleaf Pupa"],
+      "lifecycle_stage": "Adult",
+      "group": "Glowleaf Beetle Family",
+      "notes": "Often found near decaying logs in low light areas."
+    },
+    {
+      "name": "Streamfin Dart",
+      "type": "Fish",
+      "move_set": [
+        "Ripple Dash",
+        "Bubble Flicker",
+        "Current Veil"
+      ],
+      "description": "A fast-moving water creature that darts through stream pools and helps keep currents clean.",
+      "habitat": "Freshwater streams, ponds, and slow rivers",
+      "habitat_type": "Freshwater",
+      "environment_role": "Water cleaner and algae balancer for healthy waterways",
+      "physical_dimensions": "15 cm long",
+      "rarity": "Uncommon",
+      "related_forms": ["Streamfin Fry"],
+      "lifecycle_stage": "Adult",
+      "group": "Streamfin Species",
+      "notes": "Best spotted near submerged plants and gentle currents."
+    },
+    {
+      "name": "Sunflare Sprout",
+      "type": "Plant",
+      "move_set": [
+        "Solar Reach",
+        "Petal Shield",
+        "Seed Drift"
+      ],
+      "description": "A bright, cheerful plant that opens in sunlight and provides food and shelter to small wildlife.",
+      "habitat": "Sunny meadows, hillsides, and garden edges",
+      "habitat_type": "Meadow",
+      "environment_role": "Food source and nesting cover for insects and small animals",
+      "physical_dimensions": "50 cm tall",
+      "rarity": "Rare",
+      "related_forms": ["Sunflare Seedling"],
+      "lifecycle_stage": "Adult",
+      "group": "Sunflare Plants",
+      "notes": "The most eye-catching cards show it glowing in golden hour light."
+    }
+  ],
+  "art_assets": [
+    {
+      "organism_name": "Glowleaf Beetle",
+      "prompt": "A tiny glowing beetle perched on a mossy leaf, soft bioluminescent light, collectible card illustration",
+      "assets": [
+        "🪲💚",
+        "🍃✨",
+        "🌿🪲"
+      ]
+    },
+    {
+      "organism_name": "Streamfin Dart",
+      "prompt": "A swift silver fish in a clear stream, shimmering water reflections, collectible card art",
+      "assets": [
+        "🐟💧",
+        "💦🌊",
+        "🌿🐟"
+      ]
+    },
+    {
+      "organism_name": "Sunflare Sprout",
+      "prompt": "A bright sunflower-like sprout glowing in golden hour light, cheerful collectible card art",
+      "assets": [
+        "🌼☀️",
+        "🌻✨",
+        "🌿🌞"
+      ]
+    }
+  ]
+}
