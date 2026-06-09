@@ -3,11 +3,13 @@ import random
 from kivy.animation import Animation
 from kivy.app import App
 from kivy.core.window import Window
-from kivy.graphics import Color, Line, RoundedRectangle
+from kivy.graphics import Color, Line, Rectangle, RoundedRectangle
 from kivy.properties import ListProperty
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
@@ -66,14 +68,185 @@ class OutlineButton(Button):
             self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[20])
             Color(0.3, 0.6, 0.92, 0.35)
             self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=1.4)
+        with self.canvas.after:
+            self._flash_color = Color(1, 0.84, 0.2, 0)
+            self._flash_line = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=2)
         self.bind(pos=self.update_graphics, size=self.update_graphics)
 
     def update_graphics(self, *args):
         self._bg.pos = self.pos
         self._bg.size = self.size
+        self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
+        self._flash_line.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
+
+    def flash(self):
+        anim = Animation(a=1, d=0.15) + Animation(a=0, d=0.85)
+        anim.start(self._flash_color)
+
+
+class FloatingPanel(BoxLayout):
+    def __init__(self, **kwargs):
+        kwargs.setdefault('orientation', 'horizontal')
+        kwargs.setdefault('padding', (8, 8))
+        kwargs.setdefault('spacing', 8)
+        kwargs.setdefault('size_hint', (None, None))
+        super().__init__(**kwargs)
+        self._drag_offset = (0, 0)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            if super().on_touch_down(touch):
+                return True
+            self._drag_offset = (self.x - touch.x, self.y - touch.y)
+            touch.grab(self)
+            return True
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if touch.grab_current is self:
+            self.pos = (touch.x + self._drag_offset[0], touch.y + self._drag_offset[1])
+            return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        if touch.grab_current is self:
+            touch.ungrab(self)
+            return True
+        return super().on_touch_up(touch)
+
+
+class CardStackPreview(ButtonBehavior, BoxLayout):
+    def __init__(self, card, on_select, **kwargs):
+        kwargs.setdefault('orientation', 'vertical')
+        kwargs.setdefault('size_hint', (None, None))
+        kwargs.setdefault('width', 160)
+        kwargs.setdefault('height', 220)
+        super().__init__(**kwargs)
+        self.card = card
+        self.on_select = on_select
+        with self.canvas.before:
+            Color(0.06, 0.1, 0.18, 1)
+            self._bg_rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[20])
+            Color(0.2, 0.45, 0.85, 0.35)
+            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=1.4)
+        self.bind(pos=self.update_graphics, size=self.update_graphics)
+        self.add_widget(Label(
+            text=card.title,
+            color=(1, 1, 1, 1),
+            font_size='16sp',
+            bold=True,
+            size_hint=(1, None),
+            height=30,
+            halign='center',
+            valign='middle',
+            text_size=(160 - 24, None),
+        ))
+        self.add_widget(Label(
+            text=f'{card.organism.type} • {card.organism.rarity}',
+            color=(0.8, 0.9, 1, 1),
+            font_size='12sp',
+            size_hint=(1, None),
+            height=24,
+            halign='center',
+            valign='middle',
+            text_size=(160 - 24, None),
+        ))
+
+    def update_graphics(self, *args):
+        self._bg_rect.pos = self.pos
+        self._bg_rect.size = self.size
+        self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
+
+    def on_release(self):
+        self.on_select(self.card)
+
+
+class CardDetailView(ButtonBehavior, BoxLayout):
+    def __init__(self, on_tap=None, **kwargs):
+        kwargs.setdefault('orientation', 'vertical')
+        kwargs.setdefault('padding', 16)
+        kwargs.setdefault('spacing', 10)
+        super().__init__(**kwargs)
+        self.on_tap = on_tap
+        self.card = None
+        with self.canvas.before:
+            Color(0.06, 0.1, 0.18, 0.96)
+            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[24])
+            Color(0.2, 0.45, 0.85, 0.2)
+            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 24), width=2)
+        self.bind(pos=self.update_graphics, size=self.update_graphics)
+        self.title_label = Label(
+            text='',
+            color=(1, 1, 1, 1),
+            font_size='22sp',
+            bold=True,
+            size_hint=(1, None),
+            height=36,
+            halign='center',
+            valign='middle',
+            text_size=(Window.width * 0.65 - 32, None),
+        )
+        self.meta_label = Label(
+            text='',
+            color=(0.75, 0.9, 1, 1),
+            font_size='14sp',
+            size_hint=(1, None),
+            height=24,
+            halign='center',
+            valign='middle',
+            text_size=(Window.width * 0.65 - 32, None),
+        )
+        self.details_label = Label(
+            text='',
+            color=(1, 1, 1, 1),
+            font_size='14sp',
+            halign='left',
+            valign='top',
+            size_hint=(1, None),
+            height=150,
+            text_size=(Window.width * 0.65 - 32, None),
+        )
+        self.stats_label = Label(
+            text='',
+            color=(0.8, 0.92, 1, 1),
+            font_size='13sp',
+            halign='left',
+            valign='top',
+            size_hint=(1, None),
+            height=100,
+            text_size=(Window.width * 0.65 - 32, None),
+        )
+        self.add_widget(self.title_label)
+        self.add_widget(self.meta_label)
+        self.add_widget(self.details_label)
+        self.add_widget(self.stats_label)
+
+    def update_graphics(self, *args):
+        self._bg.pos = self.pos
+        self._bg.size = self.size
         self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 24)
-        self._glow.pos = (self.x + 12, self.y + self.height * 0.55)
-        self._glow.size = (self.width * 0.5, self.height * 0.22)
+
+    def set_card(self, card):
+        self.card = card
+        if not card:
+            self.title_label.text = 'No card selected'
+            self.meta_label.text = ''
+            self.details_label.text = 'Tap a card from the stack to view it here.'
+            self.stats_label.text = ''
+            return
+        self.title_label.text = card.title
+        self.meta_label.text = f'{card.organism.type} • {card.organism.rarity} • {card.background.name}'
+        self.details_label.text = f'{card.organism.description}\n\nMoves: {", ".join(card.selected_moves)}'
+        self.stats_label.text = (
+            f'Habitat: {card.selected_details["Habitat"]}\n'
+            f'Size: {card.selected_details["Size"]}\n'
+            f'Role: {card.organism.environment_role}\n'
+            f'Notes: {card.organism.notes or "None"}'
+        )
+
+    def on_release(self):
+        if self.card and self.on_tap:
+            self.on_tap(self.card)
 
 
 class HomeScreen(Screen):
@@ -278,21 +451,39 @@ class ScanScreen(Screen):
             valign='middle',
             text_size=(Window.width * 0.8 - 40, None),
         ))
+        card_box.add_widget(Label(
+            text='Tap anywhere to add this card to your collection',
+            color=(0.8, 0.9, 1, 1),
+            font_size='14sp',
+            size_hint=(1, None),
+            height=28,
+            halign='center',
+            valign='middle',
+            text_size=(Window.width * 0.8 - 40, None),
+        ))
 
         preview.add_widget(card_box)
+        dismiss_area = Button(
+            background_normal='',
+            background_color=(0, 0, 0, 0),
+            size_hint=(1, 1),
+            on_release=lambda *_: self.dismiss_scan_preview(preview),
+        )
+        preview.add_widget(dismiss_area)
         self.add_widget(preview)
 
-        def on_animation_complete(*args):
+        Animation(opacity=1, d=0.35).start(preview)
+
+    def dismiss_scan_preview(self, preview):
+        def on_shrink_complete(*args):
             self.remove_widget(preview)
             app = App.get_running_app()
             app.home_screen.update_new_card_badge()
+            app.home_screen.collection_button.flash()
             self.manager.transition = SlideTransition(direction='right')
             self.manager.current = 'home'
 
-        Animation(opacity=1, d=0.35).start(preview)
-        anim = Animation(opacity=1, d=1.15) + Animation(opacity=0, d=0.35)
-        anim.bind(on_complete=on_animation_complete)
-        anim.start(preview)
+        Animation(pos=(Window.width * 0.15, 32), size=(70, 40), opacity=0, d=0.35).bind(on_complete=on_shrink_complete).start(preview)
 
     def goto_home(self, _=None):
         self.manager.transition = SlideTransition(direction='right')
@@ -318,6 +509,7 @@ class CardBookScreen(Screen):
         ))
 
         self.new_stack_area = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, None), height=180)
+        self.selected_card_index = 0
         layout.add_widget(self.new_stack_area)
 
         control_row = BoxLayout(size_hint=(1, None), height=64, spacing=10)
@@ -335,12 +527,28 @@ class CardBookScreen(Screen):
         ))
         layout.add_widget(control_row)
 
-        self.scroll_view = ScrollView()
-        self.card_list = GridLayout(cols=2, spacing=16, size_hint_y=None, padding=(0, 10))
-        self.card_list.bind(minimum_height=self.card_list.setter('height'))
-        self.scroll_view.add_widget(self.card_list)
+        self.card_area = FloatLayout(size_hint=(1, 1))
+        self.stack_area = FloatLayout(size_hint=(None, None), size=(180, 260), pos=(18, 20))
+        self.card_area.add_widget(self.stack_area)
 
-        layout.add_widget(self.scroll_view)
+        self.selected_card_view = CardDetailView(
+            on_tap=self.open_fullscreen_card,
+            size_hint=(None, None),
+            size=(Window.width * 0.68, Window.height * 0.72),
+            pos_hint={'center_x': 0.55, 'center_y': 0.45},
+        )
+        self.selected_card_view.set_card(None)
+        self.card_area.add_widget(self.selected_card_view)
+
+        self.put_away_panel = FloatingPanel(pos_hint={'x': 0.72, 'y': 0.76}, size=(180, 64))
+        self.put_away_panel.add_widget(OutlineButton(text='Put away new cards', size_hint=(1, 1), on_release=self.put_away_cards))
+        self.card_area.add_widget(self.put_away_panel)
+
+        self.sort_panel = FloatingPanel(pos_hint={'x': 0.72, 'y': 0.64}, size=(180, 64))
+        self.sort_panel.add_widget(OutlineButton(text='Organize by type', size_hint=(1, 1), on_release=self.sort_by_type))
+        self.card_area.add_widget(self.sort_panel)
+
+        layout.add_widget(self.card_area)
         layout.add_widget(OutlineButton(
             text='Back to Home',
             font_size='20sp',
@@ -352,7 +560,24 @@ class CardBookScreen(Screen):
 
     def add_card(self, card):
         self.cards.append(card)
+        self.selected_card_index = len(self.cards) - 1
         self.refresh_cards()
+
+    def select_card(self, card):
+        if card in self.cards:
+            self.selected_card_index = self.cards.index(card)
+            self.selected_card_view.set_card(card)
+
+    def open_fullscreen_card(self, card):
+        content = BoxLayout(orientation='vertical', padding=20, spacing=14)
+        detail = CardDetailView(size_hint=(1, 1))
+        detail.set_card(card)
+        content.add_widget(detail)
+        close_button = OutlineButton(text='Close', size_hint=(1, None), height=56)
+        popup = Popup(title=card.title, content=content, size_hint=(0.96, 0.96), auto_dismiss=True)
+        close_button.bind(on_release=lambda *_: popup.dismiss())
+        content.add_widget(close_button)
+        popup.open()
 
     def refresh_cards(self):
         app = App.get_running_app()
@@ -420,139 +645,31 @@ class CardBookScreen(Screen):
                 text_size=(Window.width - 40, None),
             ))
 
-        self.card_list.clear_widgets()
+        self.stack_area.clear_widgets()
         if not self.cards:
-            self.card_list.add_widget(Label(
+            self.selected_card_view.set_card(None)
+            no_card = Label(
                 text='No cards yet. Scan a creature to add cards to your collection.',
                 color=(1, 1, 1, 1),
                 font_size='16sp',
                 halign='center',
                 valign='middle',
-                size_hint=(1, None),
-                height=120,
-                text_size=(Window.width - 40, None),
-            ))
+                size_hint=(None, None),
+                size=(180, 120),
+                text_size=(160, None),
+            )
+            self.stack_area.add_widget(no_card)
             return
 
-        for card in reversed(self.cards):
-            card_box = styled_layout(BoxLayout(orientation='vertical', padding=12, spacing=8, size_hint=(1, None), height=330))
-            card_box.add_widget(Label(
-                text=card.background.preview,
-                color=(1, 1, 1, 1),
-                font_size='38sp',
-                size_hint=(1, None),
-                height=70,
-                halign='center',
-                valign='middle',
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            card_box.add_widget(Label(
-                text=card.title,
-                color=(1, 1, 1, 1),
-                font_size='18sp',
-                bold=True,
-                size_hint=(1, None),
-                height=28,
-                halign='center',
-                valign='middle',
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            rel_line = []
-            if card.organism.lifecycle_stage:
-                rel_line.append(card.organism.lifecycle_stage)
-            if card.organism.group:
-                rel_line.append(card.organism.group)
-            if rel_line:
-                card_box.add_widget(Label(
-                    text=' • '.join(rel_line),
-                    color=(0.7, 0.85, 1, 1),
-                    font_size='13sp',
-                    size_hint=(1, None),
-                    height=24,
-                    halign='center',
-                    valign='middle',
-                    text_size=(Window.width / 2 - 40, None),
-                ))
-            card_box.add_widget(Label(
-                text=f'{card.organism.type} • {card.organism.rarity} • {card.background.name}',
-                color=(0.8, 0.9, 1, 1),
-                font_size='14sp',
-                size_hint=(1, None),
-                height=24,
-                halign='center',
-                valign='middle',
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            card_box.add_widget(Label(
-                text=f'Moves: {", ".join(card.selected_moves)}',
-                color=(1, 1, 1, 1),
-                font_size='13sp',
-                halign='left',
-                valign='top',
-                size_hint=(1, None),
-                height=42,
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            card_box.add_widget(Label(
-                text=card.organism.description,
-                color=(1, 1, 1, 1),
-                font_size='13sp',
-                halign='left',
-                valign='top',
-                size_hint=(1, None),
-                height=58,
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            if card.organism.related_forms:
-                card_box.add_widget(Label(
-                    text=f'Related: {", ".join(card.organism.related_forms)}',
-                    color=(0.7, 0.85, 1, 1),
-                    font_size='12sp',
-                    italic=True,
-                    size_hint=(1, None),
-                    height=24,
-                    halign='left',
-                    valign='middle',
-                    text_size=(Window.width / 2 - 40, None),
-                ))
-            card_box.add_widget(Label(
-                text=f'Habitat: {card.selected_details["Habitat"]}',
-                color=(0.7, 0.85, 1, 1),
-                font_size='12sp',
-                italic=True,
-                size_hint=(1, None),
-                height=24,
-                halign='left',
-                valign='middle',
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            card_box.add_widget(Label(
-                text=f'Size: {card.selected_details["Size"]}',
-                color=(0.7, 0.85, 1, 1),
-                font_size='12sp',
-                italic=True,
-                size_hint=(1, None),
-                height=24,
-                halign='left',
-                valign='middle',
-                text_size=(Window.width / 2 - 40, None),
-            ))
-            if card.organism.notes:
-                card_box.add_widget(Label(
-                    text=f'Notes: {card.organism.notes}',
-                    color=(0.7, 0.85, 1, 1),
-                    font_size='11sp',
-                    italic=True,
-                    size_hint=(1, None),
-                    height=26,
-                    halign='left',
-                    valign='middle',
-                    text_size=(Window.width / 2 - 40, None),
-                ))
-            for child in card_box.children:
-                if isinstance(child, Label):
-                    child.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
-            self.card_list.add_widget(card_box)
+        if self.selected_card_index >= len(self.cards):
+            self.selected_card_index = len(self.cards) - 1
+        selected_card = self.cards[self.selected_card_index]
+        self.selected_card_view.set_card(selected_card)
+
+        for index, card in enumerate(reversed(self.cards)):
+            preview = CardStackPreview(card, on_select=self.select_card)
+            preview.pos = (index * 16, index * 12)
+            self.stack_area.add_widget(preview)
 
     def on_enter(self, *args):
         self.refresh_cards()
