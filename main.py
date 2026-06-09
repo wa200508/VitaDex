@@ -1,5 +1,9 @@
+import os
 import random
 import time
+
+# Disable Kivy Inspector to prevent red dots on right-click
+os.environ['KIVY_INSPECTOR'] = '0'
 
 from kivy.animation import Animation
 from kivy.app import App
@@ -93,24 +97,33 @@ class FloatingPanel(BoxLayout):
         kwargs.setdefault('size_hint', (None, None))
         super().__init__(**kwargs)
         self._drag_offset = (0, 0)
+        self._is_dragging = False
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
-            if super().on_touch_down(touch):
-                return True
             self._drag_offset = (self.x - touch.x, self.y - touch.y)
             touch.grab(self)
-            return True
+            self._is_dragging = False
+            return super().on_touch_down(touch)
         return super().on_touch_down(touch)
 
     def on_touch_move(self, touch):
         if touch.grab_current is self:
-            self.pos = (touch.x + self._drag_offset[0], touch.y + self._drag_offset[1])
-            return True
+            # If movement is >10px, treat as drag, otherwise allow button clicks
+            dx = touch.x - touch.ox
+            dy = touch.y - touch.oy
+            distance = (dx**2 + dy**2) ** 0.5
+            if distance > 10:
+                self._is_dragging = True
+                self.pos = (touch.x + self._drag_offset[0], touch.y + self._drag_offset[1])
+                return True
         return super().on_touch_move(touch)
 
     def on_touch_up(self, touch):
         if touch.grab_current is self:
+            if not self._is_dragging:
+                # If not dragging, let child widgets (buttons) handle the touch
+                return super().on_touch_down(touch)
             touch.ungrab(self)
             return True
         return super().on_touch_up(touch)
@@ -532,8 +545,11 @@ class CardBookScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(name='cardbook', **kwargs)
-        layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=18))
+        self.current_view = 'stacks'  # 'stacks' or 'tiles'
+        
+        layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=12))
 
+        # Title
         layout.add_widget(Label(
             text='Card Book',
             color=(1, 1, 1, 1),
@@ -545,32 +561,64 @@ class CardBookScreen(Screen):
             text_size=(Window.width - 40, None),
         ))
 
+        # New cards section
         self.new_stack_area = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, None), height=180)
         self.selected_card_index = 0
         layout.add_widget(self.new_stack_area)
 
-        self.card_area = FloatLayout(size_hint=(1, 1))
-        self.stack_area = FloatLayout(size_hint=(None, None), size=(180, 260), pos=(18, 20))
-        self.card_area.add_widget(self.stack_area)
+        # Toolbar with view selector and options
+        toolbar = BoxLayout(size_hint=(1, None), height=64, spacing=12)
+        
+        # View selector dropdown
+        view_options = BoxLayout(size_hint=(None, None), size=(140, 64), spacing=8)
+        view_options.add_widget(OutlineButton(
+            text='Stacks',
+            size_hint=(0.5, 1),
+            on_release=lambda x: self.switch_view('stacks')
+        ))
+        view_options.add_widget(OutlineButton(
+            text='Tiles',
+            size_hint=(0.5, 1),
+            on_release=lambda x: self.switch_view('tiles')
+        ))
+        toolbar.add_widget(view_options)
+        
+        toolbar.add_widget(OutlineButton(
+            text='By Type',
+            size_hint=(1, 1),
+            on_release=self.sort_by_type,
+        ))
+        toolbar.add_widget(OutlineButton(
+            text='Put Away',
+            size_hint=(1, 1),
+            on_release=self.put_away_cards,
+        ))
+        layout.add_widget(toolbar)
 
-        self.selected_card_view = CardDetailView(
-            on_tap=self.open_fullscreen_card,
-            size_hint=(None, None),
-            size=(Window.width * 0.68, Window.height * 0.72),
-            pos_hint={'center_x': 0.55, 'center_y': 0.45},
-        )
-        self.selected_card_view.set_card(None)
-        self.card_area.add_widget(self.selected_card_view)
+        # Main collection area
+        self.collection_area = FloatLayout(size_hint=(1, 1))
+        
+        # Stacks view
+        self.stack_area = FloatLayout(size_hint=(None, None), size=(200, 280))
+        self.collection_area.add_widget(self.stack_area)
+        
+        # Tiles view (hidden by default)
+        self.tiles_area = GridLayout(cols=4, spacing=12, size_hint=(1, None), padding=12)
+        self.tiles_area.bind(minimum_height=self.tiles_area.setter('height'))
+        self.tiles_scroll = ScrollView(size_hint=(1, 1))
+        self.tiles_scroll.add_widget(self.tiles_area)
+        
+        layout.add_widget(self.collection_area)
 
-        self.put_away_panel = FloatingPanel(pos_hint={'x': 0.72, 'y': 0.76}, size=(180, 64))
-        self.put_away_panel.add_widget(OutlineButton(text='Put away new cards', size_hint=(1, 1), on_release=self.put_away_cards))
-        self.card_area.add_widget(self.put_away_panel)
+        # Floating panels at bottom (no overlap)
+        self.put_away_panel = FloatingPanel(pos_hint={'x': 0.05, 'y': 0.01}, size=(160, 56))
+        self.put_away_panel.add_widget(OutlineButton(text='Put Away New', size_hint=(1, 1), on_release=self.put_away_cards))
+        self.collection_area.add_widget(self.put_away_panel)
 
-        self.sort_panel = FloatingPanel(pos_hint={'x': 0.72, 'y': 0.64}, size=(180, 64))
-        self.sort_panel.add_widget(OutlineButton(text='Organize by type', size_hint=(1, 1), on_release=self.sort_by_type))
-        self.card_area.add_widget(self.sort_panel)
+        self.sort_panel = FloatingPanel(pos_hint={'x': 0.28, 'y': 0.01}, size=(160, 56))
+        self.sort_panel.add_widget(OutlineButton(text='Sort by Type', size_hint=(1, 1), on_release=self.sort_by_type))
+        self.collection_area.add_widget(self.sort_panel)
 
-        layout.add_widget(self.card_area)
         layout.add_widget(OutlineButton(
             text='Back to Home',
             font_size='20sp',
@@ -588,7 +636,20 @@ class CardBookScreen(Screen):
     def select_card(self, card):
         if card in self.cards:
             self.selected_card_index = self.cards.index(card)
-            self.selected_card_view.set_card(card)
+
+    def switch_view(self, view_type):
+        self.current_view = view_type
+        self.collection_area.clear_widgets()
+        
+        if view_type == 'stacks':
+            self.collection_area.add_widget(self.stack_area)
+        else:
+            self.collection_area.add_widget(self.tiles_scroll)
+        
+        # Re-add floating panels
+        self.collection_area.add_widget(self.put_away_panel)
+        self.collection_area.add_widget(self.sort_panel)
+        self.refresh_cards()
 
     def open_fullscreen_card(self, card):
         content = BoxLayout(orientation='vertical', padding=20, spacing=14)
@@ -667,30 +728,81 @@ class CardBookScreen(Screen):
             ))
 
         self.stack_area.clear_widgets()
+        self.tiles_area.clear_widgets()
+        
         if not self.cards:
-            self.selected_card_view.set_card(None)
             no_card = Label(
                 text='No cards yet. Scan a creature to add cards to your collection.',
                 color=(1, 1, 1, 1),
                 font_size='16sp',
                 halign='center',
                 valign='middle',
-                size_hint=(None, None),
-                size=(180, 120),
-                text_size=(160, None),
+                size_hint=(1, None),
+                height=200,
+                text_size=(Window.width - 40, None),
             )
-            self.stack_area.add_widget(no_card)
+            if self.current_view == 'stacks':
+                self.stack_area.add_widget(no_card)
+            else:
+                self.tiles_area.add_widget(no_card)
             return
 
-        if self.selected_card_index >= len(self.cards):
-            self.selected_card_index = len(self.cards) - 1
-        selected_card = self.cards[self.selected_card_index]
-        self.selected_card_view.set_card(selected_card)
-
+        # Populate stacks view
         for index, card in enumerate(reversed(self.cards)):
             preview = CardStackPreview(card, on_select=self.select_card)
             preview.pos = (index * 16, index * 12)
             self.stack_area.add_widget(preview)
+
+        # Populate tiles view
+        for card in self.cards:
+            tile = BoxLayout(orientation='vertical', size_hint=(1, None), height=220, padding=10, spacing=8)
+            with tile.canvas.before:
+                Color(0.06, 0.1, 0.18, 1)
+                RoundedRectangle(pos=tile.pos, size=tile.size, radius=[20])
+                Color(0.2, 0.45, 0.85, 0.35)
+                Line(rounded_rectangle=(tile.x, tile.y, tile.width, tile.height, 20), width=1.4)
+            
+            def update_tile(_, __):
+                tile.canvas.before.clear()
+                with tile.canvas.before:
+                    Color(0.06, 0.1, 0.18, 1)
+                    RoundedRectangle(pos=tile.pos, size=tile.size, radius=[20])
+                    Color(0.2, 0.45, 0.85, 0.35)
+                    Line(rounded_rectangle=(tile.x, tile.y, tile.width, tile.height, 20), width=1.4)
+            
+            tile.bind(pos=update_tile, size=update_tile)
+            tile.add_widget(Label(
+                text=card.title,
+                color=(1, 1, 1, 1),
+                font_size='14sp',
+                bold=True,
+                size_hint=(1, None),
+                height=40,
+                halign='center',
+                valign='middle',
+                text_size=(tile.width - 20, None),
+            ))
+            tile.add_widget(Label(
+                text=card.card_art,
+                color=(1, 1, 1, 1),
+                font_size='32sp',
+                size_hint=(1, None),
+                height=80,
+                halign='center',
+                valign='middle',
+                text_size=(tile.width, None),
+            ))
+            tile.add_widget(Label(
+                text=f'{card.organism.type} • {card.organism.rarity}',
+                color=(0.8, 0.9, 1, 1),
+                font_size='12sp',
+                size_hint=(1, None),
+                height=30,
+                halign='center',
+                valign='middle',
+                text_size=(tile.width - 20, None),
+            ))
+            self.tiles_area.add_widget(tile)
 
     def on_enter(self, *args):
         self.refresh_cards()
@@ -716,6 +828,10 @@ class CardBookScreen(Screen):
 
 class VitaDexApp(App):
     def build(self):
+        # Disable Kivy Inspector (prevents red dots on right-click)
+        from kivy.core.window import Window
+        Window.bind(on_keyboard=self._on_keyboard)
+        
         Window.clearcolor = (0, 0, 0, 1)
         self.cards = []
         self.new_cards = []
@@ -729,6 +845,14 @@ class VitaDexApp(App):
         manager.add_widget(self.scan_screen)
         manager.add_widget(self.card_book_screen)
         return manager
+    
+    def _on_keyboard(self, window, key, scancode, codepoint, modifier):
+        # Block F1 which opens the inspector and Ctrl+E
+        if key == 282:  # F1
+            return True
+        if key == 101 and 'ctrl' in modifier:  # Ctrl+E
+            return True
+        return False
 
 
 if __name__ == '__main__':
