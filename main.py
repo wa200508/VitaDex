@@ -100,17 +100,17 @@ class HomeScreen(Screen):
             height=140,
         ))
 
-        button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=280, spacing=16)
+        button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=200, spacing=14)
         button_layout.add_widget(OutlineButton(
             text='🔍 Start Scan',
             size_hint=(1, None),
-            height=120,
+            height=88,
             on_release=self.goto_scan,
         ))
         self.collection_button = OutlineButton(
             text='📒 Card Book',
             size_hint=(1, None),
-            height=120,
+            height=88,
             on_release=self.goto_card_book,
         )
         button_layout.add_widget(self.collection_button)
@@ -199,13 +199,13 @@ class ScanScreen(Screen):
         layout.add_widget(OutlineButton(
             text='🔍 Scan Now',
             size_hint=(1, None),
-            height=120,
+            height=84,
             on_release=self.perform_scan,
         ))
         layout.add_widget(OutlineButton(
             text='🏠 Back to Home',
             size_hint=(1, None),
-            height=120,
+            height=84,
             on_release=self.goto_home,
         ))
         self.add_widget(layout)
@@ -220,7 +220,7 @@ class ScanScreen(Screen):
         self.show_scan_animation(card)
 
     def show_scan_animation(self, card):
-        preview = FloatLayout(size_hint=(0.9, None), height=280, pos_hint={'center_x': 0.5, 'center_y': 0.55}, opacity=0)
+        preview = FloatLayout(size_hint=(0.9, None), height=220, pos_hint={'center_x': 0.5, 'center_y': 0.55}, opacity=0)
         card_box = BoxLayout(orientation='vertical', padding=18, spacing=10, size_hint=(1, 1))
         with card_box.canvas.before:
             Color(0.08, 0.12, 0.2, 0.96)
@@ -318,18 +318,22 @@ class CardBookScreen(Screen):
             text_size=(Window.width - 40, None),
         ))
 
-        self.new_stack_area = FloatLayout(size_hint=(1, None), height=180)
+        self.new_stack_area = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, None), height=180)
         layout.add_widget(self.new_stack_area)
 
-        control_row = BoxLayout(size_hint=(1, None), height=80, spacing=12)
+        control_row = BoxLayout(size_hint=(1, None), height=70, spacing=10)
         control_row.add_widget(OutlineButton(
             text='📥 Put away new cards',
             font_size='18sp',
+            size_hint=(1, None),
+            height=70,
             on_release=self.put_away_cards,
         ))
         control_row.add_widget(OutlineButton(
             text='🧩 Organize by type',
             font_size='18sp',
+            size_hint=(1, None),
+            height=70,
             on_release=self.sort_by_type,
         ))
         layout.add_widget(control_row)
@@ -344,7 +348,7 @@ class CardBookScreen(Screen):
             text='🏠 Back to Home',
             font_size='22sp',
             size_hint=(1, None),
-            height=120,
+            height=84,
             on_release=self.goto_home,
         ))
         self.add_widget(layout)
@@ -364,17 +368,13 @@ class CardBookScreen(Screen):
                 font_size='18sp',
                 size_hint=(1, None),
                 height=32,
-                pos_hint={'top': 1},
                 halign='left',
                 valign='middle',
                 text_size=(Window.width - 40, None),
             ))
-            for index, card in enumerate(app.new_cards[-3:]):
-                preview = FloatLayout(
-                    size_hint=(None, None),
-                    size=(Window.width * 0.38, 120),
-                    pos=(index * 26, index * 16),
-                )
+            preview_row = BoxLayout(spacing=10, size_hint=(1, None), height=120)
+            for card in app.new_cards[-3:]:
+                preview = BoxLayout(orientation='vertical', size_hint=(None, None), size=(Window.width * 0.3, 120), padding=10, spacing=8)
                 with preview.canvas.before:
                     Color(0.05, 0.1, 0.16, 1)
                     RoundedRectangle(pos=preview.pos, size=preview.size, radius=[20])
@@ -391,10 +391,9 @@ class CardBookScreen(Screen):
                 preview.add_widget(Label(
                     text=card.card_art,
                     color=(1, 1, 1, 1),
-                    font_size='34sp',
+                    font_size='28sp',
                     size_hint=(1, None),
-                    height=60,
-                    pos_hint={'top': 1},
+                    height=56,
                     halign='center',
                     valign='middle',
                     text_size=(preview.width, None),
@@ -405,12 +404,12 @@ class CardBookScreen(Screen):
                     font_size='14sp',
                     size_hint=(1, None),
                     height=24,
-                    pos_hint={'x': 0, 'y': 0},
                     halign='center',
                     valign='middle',
                     text_size=(preview.width, None),
                 ))
-                self.new_stack_area.add_widget(preview)
+                preview_row.add_widget(preview)
+            self.new_stack_area.add_widget(preview_row)
         else:
             self.new_stack_area.add_widget(Label(
                 text='No new cards to put away yet.',
