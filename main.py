@@ -547,62 +547,49 @@ class CardBookScreen(Screen):
         super().__init__(name='cardbook', **kwargs)
         self.current_view = 'stacks'  # 'stacks' or 'tiles'
         
-        layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=12))
+        layout = BoxLayout(orientation='vertical', padding=20, spacing=12)
+        styled_layout(layout)
 
-        # Title
-        layout.add_widget(Label(
+        # Title and view selector
+        header = BoxLayout(size_hint=(1, None), height=60, spacing=20)
+        header.add_widget(Label(
             text='Card Book',
             color=(1, 1, 1, 1),
             font_size='28sp',
-            size_hint=(1, None),
-            height=50,
+            size_hint=(0.7, 1),
             halign='left',
             valign='middle',
-            text_size=(Window.width - 40, None),
+            text_size=(Window.width * 0.5, None),
         ))
+        
+        # View selector dropdown with icons
+        view_dropdown = BoxLayout(size_hint=(0.3, 1), spacing=8)
+        view_dropdown.add_widget(OutlineButton(
+            text='Stacks',
+            size_hint=(0.5, 1),
+            on_release=self._switch_to_stacks,
+        ))
+        view_dropdown.add_widget(OutlineButton(
+            text='Tiles',
+            size_hint=(0.5, 1),
+            on_release=self._switch_to_tiles,
+        ))
+        header.add_widget(view_dropdown)
+        layout.add_widget(header)
 
         # New cards section
         self.new_stack_area = BoxLayout(orientation='vertical', spacing=10, size_hint=(1, None), height=180)
         self.selected_card_index = 0
         layout.add_widget(self.new_stack_area)
 
-        # Toolbar with view selector and options
-        toolbar = BoxLayout(size_hint=(1, None), height=64, spacing=12)
-        
-        # View selector dropdown
-        view_options = BoxLayout(size_hint=(None, None), size=(140, 64), spacing=8)
-        view_options.add_widget(OutlineButton(
-            text='Stacks',
-            size_hint=(0.5, 1),
-            on_release=lambda x: self.switch_view('stacks')
-        ))
-        view_options.add_widget(OutlineButton(
-            text='Tiles',
-            size_hint=(0.5, 1),
-            on_release=lambda x: self.switch_view('tiles')
-        ))
-        toolbar.add_widget(view_options)
-        
-        toolbar.add_widget(OutlineButton(
-            text='By Type',
-            size_hint=(1, 1),
-            on_release=self.sort_by_type,
-        ))
-        toolbar.add_widget(OutlineButton(
-            text='Put Away',
-            size_hint=(1, 1),
-            on_release=self.put_away_cards,
-        ))
-        layout.add_widget(toolbar)
-
         # Main collection area
         self.collection_area = FloatLayout(size_hint=(1, 1))
         
-        # Stacks view
-        self.stack_area = FloatLayout(size_hint=(None, None), size=(200, 280))
+        # Stacks view - card stack on left
+        self.stack_area = FloatLayout(size_hint=(None, None), size=(200, 280), pos_hint={'x': 0, 'y': 0})
         self.collection_area.add_widget(self.stack_area)
         
-        # Tiles view (hidden by default)
+        # Tiles view - scrollable grid
         self.tiles_area = GridLayout(cols=4, spacing=12, size_hint=(1, None), padding=12)
         self.tiles_area.bind(minimum_height=self.tiles_area.setter('height'))
         self.tiles_scroll = ScrollView(size_hint=(1, 1))
@@ -610,15 +597,24 @@ class CardBookScreen(Screen):
         
         layout.add_widget(self.collection_area)
 
-        # Floating panels at bottom (no overlap)
-        self.put_away_panel = FloatingPanel(pos_hint={'x': 0.05, 'y': 0.01}, size=(160, 56))
-        self.put_away_panel.add_widget(OutlineButton(text='Put Away New', size_hint=(1, 1), on_release=self.put_away_cards))
-        self.collection_area.add_widget(self.put_away_panel)
-
-        self.sort_panel = FloatingPanel(pos_hint={'x': 0.28, 'y': 0.01}, size=(160, 56))
-        self.sort_panel.add_widget(OutlineButton(text='Sort by Type', size_hint=(1, 1), on_release=self.sort_by_type))
+        # Floating control panels at bottom
+        self.sort_panel = FloatingPanel(pos_hint={'x': 0.05, 'y': 0.02}, size=(160, 56))
+        self.sort_panel.add_widget(OutlineButton(
+            text='Sort by Type',
+            size_hint=(1, 1),
+            on_release=self.sort_by_type,
+        ))
         self.collection_area.add_widget(self.sort_panel)
 
+        self.put_away_panel = FloatingPanel(pos_hint={'x': 0.28, 'y': 0.02}, size=(160, 56))
+        self.put_away_panel.add_widget(OutlineButton(
+            text='Put Away New',
+            size_hint=(1, 1),
+            on_release=self.put_away_cards,
+        ))
+        self.collection_area.add_widget(self.put_away_panel)
+
+        # Back button
         layout.add_widget(OutlineButton(
             text='Back to Home',
             font_size='20sp',
@@ -628,6 +624,22 @@ class CardBookScreen(Screen):
         ))
         self.add_widget(layout)
 
+    def _switch_to_stacks(self, _=None):
+        self.current_view = 'stacks'
+        self.collection_area.clear_widgets()
+        self.collection_area.add_widget(self.stack_area)
+        self.collection_area.add_widget(self.sort_panel)
+        self.collection_area.add_widget(self.put_away_panel)
+        self.refresh_cards()
+
+    def _switch_to_tiles(self, _=None):
+        self.current_view = 'tiles'
+        self.collection_area.clear_widgets()
+        self.collection_area.add_widget(self.tiles_scroll)
+        self.collection_area.add_widget(self.sort_panel)
+        self.collection_area.add_widget(self.put_away_panel)
+        self.refresh_cards()
+
     def add_card(self, card):
         self.cards.append(card)
         self.selected_card_index = len(self.cards) - 1
@@ -636,20 +648,6 @@ class CardBookScreen(Screen):
     def select_card(self, card):
         if card in self.cards:
             self.selected_card_index = self.cards.index(card)
-
-    def switch_view(self, view_type):
-        self.current_view = view_type
-        self.collection_area.clear_widgets()
-        
-        if view_type == 'stacks':
-            self.collection_area.add_widget(self.stack_area)
-        else:
-            self.collection_area.add_widget(self.tiles_scroll)
-        
-        # Re-add floating panels
-        self.collection_area.add_widget(self.put_away_panel)
-        self.collection_area.add_widget(self.sort_panel)
-        self.refresh_cards()
 
     def open_fullscreen_card(self, card):
         content = BoxLayout(orientation='vertical', padding=20, spacing=14)
