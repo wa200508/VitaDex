@@ -2,7 +2,7 @@ import json
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 DATA_PATH = Path(__file__).parent / 'data' / 'database.json'
@@ -67,6 +67,7 @@ class CardDatabase:
 
     @classmethod
     def from_json(cls, data: dict) -> 'CardDatabase':
+        cls.validate_data(data)
         backgrounds = [CardBackground(**background) for background in data.get('background_templates', [])]
         organisms = {
             entry['name']: OrganismEntry(**entry)
@@ -77,6 +78,71 @@ class CardDatabase:
             for art in data.get('art_assets', [])
         }
         return cls(backgrounds=backgrounds, organisms=organisms, art_sets=art_sets)
+
+    @staticmethod
+    def validate_data(data: Any) -> None:
+        """Validate the catalog invariants required to build a collectible card.
+
+        JSON Schema validation remains useful for externally published catalog
+        files, but these checks keep the app from starting with a catalog that
+        cannot produce a card even when it is loaded directly from disk.
+        """
+        if not isinstance(data, dict):
+            raise ValueError('Card database must be a JSON object.')
+
+        required_sections = ('background_templates', 'organisms', 'art_assets')
+        for section in required_sections:
+            if not isinstance(data.get(section), list):
+                raise ValueError(f'Card database section {section!r} must be a list.')
+
+        backgrounds = data['background_templates']
+        organisms = data['organisms']
+        art_assets = data['art_assets']
+        if not backgrounds:
+            raise ValueError('Card database must contain at least one background template.')
+        if not organisms:
+            raise ValueError('Card database must contain at least one organism.')
+
+        background_ids = set()
+        for background in backgrounds:
+            if not isinstance(background, dict):
+                raise ValueError('Every background template must be an object.')
+            missing = {'id', 'name', 'style', 'preview'} - background.keys()
+            if missing:
+                raise ValueError(f'Background template is missing fields: {sorted(missing)}.')
+            if not background['id']:
+                raise ValueError('Every background template must have a non-empty id.')
+            if background['id'] in background_ids:
+                raise ValueError(f'Duplicate background id: {background["id"]!r}.')
+            background_ids.add(background['id'])
+
+        organism_names = set()
+        for organism in organisms:
+            if not isinstance(organism, dict):
+                raise ValueError('Every organism must be an object.')
+            missing = {
+                'name', 'type', 'description', 'habitat', 'environment_role', 'rarity'
+            } - organism.keys()
+            if missing:
+                raise ValueError(f'Organism is missing fields: {sorted(missing)}.')
+            if not organism['name']:
+                raise ValueError('Every organism must have a non-empty name.')
+            if organism['name'] in organism_names:
+                raise ValueError(f'Duplicate organism name: {organism["name"]!r}.')
+            organism_names.add(organism['name'])
+
+        for art in art_assets:
+            if not isinstance(art, dict):
+                raise ValueError('Every art asset entry must be an object.')
+            missing = {'organism_name', 'prompt', 'assets'} - art.keys()
+            if missing:
+                raise ValueError(f'Art asset entry is missing fields: {sorted(missing)}.')
+            if not art['organism_name']:
+                raise ValueError('Every art asset entry must name an organism.')
+            if art['organism_name'] not in organism_names:
+                raise ValueError(
+                    f'Art asset references unknown organism: {art["organism_name"]!r}.'
+                )
 
     @classmethod
     def load_default(cls, path: Optional[Path] = None) -> 'CardDatabase':
