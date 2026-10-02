@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, Protocol, Sequence
 
 from database import CardDatabase, OrganismEntry
+from photos import PhotoEncounter
 
 
 DEFAULT_SAFETY_MESSAGE = (
@@ -50,8 +51,8 @@ class IdentificationResult:
 class IdentificationService(Protocol):
     """A local or remote provider that returns possible organism matches."""
 
-    def identify(self) -> IdentificationResult:
-        """Identify an encounter and return zero or more ranked candidates."""
+    def identify(self, encounter: Optional[PhotoEncounter] = None) -> IdentificationResult:
+        """Identify the supplied photo and return zero or more ranked candidates."""
 
 
 class DemoIdentificationService:
@@ -61,7 +62,7 @@ class DemoIdentificationService:
         self.catalog = catalog
         self.randomizer = randomizer or random.Random()
 
-    def identify(self) -> IdentificationResult:
+    def identify(self, encounter: Optional[PhotoEncounter] = None) -> IdentificationResult:
         organisms = list(self.catalog.organisms.values())
         if not organisms:
             return IdentificationResult(candidates=(), source='demo')

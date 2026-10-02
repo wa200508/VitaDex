@@ -1,3 +1,6 @@
 kivy>=2.1.0
 huggingface_hub>=0.16.0
 jsonschema>=4.0.0
+numpy>=1.26.0
+Pillow>=10.0.0
+ai-edge-litert>=2.0.0

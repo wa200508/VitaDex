@@ -10,7 +10,7 @@ from typing import Iterable, List, Optional
 from database import Card, CardBackground, OrganismEntry
 
 
-JOURNAL_VERSION = 1
+JOURNAL_VERSION = 2
 
 
 class JournalError(ValueError):
@@ -69,7 +69,7 @@ class JournalRepository:
     @staticmethod
     def _initialize(connection: sqlite3.Connection) -> None:
         version = connection.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, JOURNAL_VERSION):
+        if version not in (0, 1, JOURNAL_VERSION):
             raise JournalError(f'Journal database version {version} is not supported.')
 
         connection.execute(
@@ -80,7 +80,7 @@ class JournalRepository:
             )
             '''
         )
-        if version == 0:
+        if version < JOURNAL_VERSION:
             connection.execute(f'PRAGMA user_version = {JOURNAL_VERSION}')
 
     def _load_legacy_cards(self) -> List[Card]:
@@ -90,7 +90,7 @@ class JournalRepository:
         except (OSError, json.JSONDecodeError) as error:
             raise JournalError(f'Could not read legacy journal at {self.legacy_path}: {error}') from error
 
-        if not isinstance(data, dict) or data.get('version') != JOURNAL_VERSION:
+        if not isinstance(data, dict) or data.get('version') not in (1, JOURNAL_VERSION):
             raise JournalError('Legacy journal has an unsupported or missing version.')
         cards = data.get('cards')
         if not isinstance(cards, list):
@@ -109,6 +109,11 @@ class JournalRepository:
             'art_asset': card.art_asset,
             'selected_moves': card.selected_moves,
             'selected_details': card.selected_details,
+            'encounter_id': card.encounter_id,
+            'observed_at': card.observed_at,
+            'photo_asset': card.photo_asset,
+            'identification_source': card.identification_source,
+            'confidence': card.confidence,
         }
 
     @staticmethod
@@ -121,6 +126,11 @@ class JournalRepository:
             art_asset=data['art_asset'],
             selected_moves=data['selected_moves'],
             selected_details=data['selected_details'],
+            encounter_id=data.get('encounter_id', ''),
+            observed_at=data.get('observed_at', ''),
+            photo_asset=data.get('photo_asset', ''),
+            identification_source=data.get('identification_source', 'legacy'),
+            confidence=data.get('confidence'),
         )
 
 

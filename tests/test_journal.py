@@ -57,7 +57,7 @@ def test_legacy_json_journal_is_migrated_to_sqlite(tmp_path):
     assert loaded_cards == [original_card]
 
 
-@pytest.mark.parametrize('version', [2, 99])
+@pytest.mark.parametrize('version', [3, 99])
 def test_unsupported_database_versions_are_rejected(tmp_path, version):
     journal_path = tmp_path / 'journal.sqlite3'
     with sqlite3.connect(journal_path) as connection:
@@ -128,3 +128,35 @@ def test_filesystem_errors_are_reported_as_journal_errors(tmp_path):
         repository.load_cards()
     with pytest.raises(JournalError, match='Could not save journal'):
         repository.save_cards([build_card()])
+
+
+def test_version_one_journal_migrates_without_losing_snapshots(tmp_path):
+    path = tmp_path / 'journal.sqlite3'
+    card = build_card()
+    old_snapshot = JournalRepository._card_to_dict(card)
+    for field in ('encounter_id', 'observed_at', 'photo_asset', 'identification_source', 'confidence'):
+        old_snapshot.pop(field)
+    for field in ('id', 'scientific_name', 'safety_message', 'model_labels', 'references', 'is_demo'):
+        old_snapshot['organism'].pop(field)
+    with sqlite3.connect(path) as connection:
+        connection.execute('CREATE TABLE cards (position INTEGER PRIMARY KEY, card_json TEXT NOT NULL)')
+        connection.execute('INSERT INTO cards VALUES (0, ?)', (json.dumps(old_snapshot),))
+        connection.execute('PRAGMA user_version = 1')
+    loaded = JournalRepository(path).load_cards()
+    assert loaded[0].title == card.title
+    assert loaded[0].organism.is_demo
+    assert loaded[0].identification_source == 'legacy'
+    with sqlite3.connect(path) as connection:
+        assert connection.execute('PRAGMA user_version').fetchone()[0] == JOURNAL_VERSION
+
+
+def test_encounter_metadata_survives_journal_round_trip(tmp_path):
+    card = build_card()
+    card.encounter_id = 'unique-encounter'
+    card.observed_at = '2026-10-01T22:00:00+00:00'
+    card.photo_asset = 'photos/unique-encounter.jpg'
+    card.identification_source = 'local-model'
+    card.confidence = 0.92
+    repository = JournalRepository(tmp_path / 'journal.sqlite3')
+    repository.save_cards([card])
+    assert repository.load_cards() == [card]

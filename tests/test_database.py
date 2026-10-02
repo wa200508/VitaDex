@@ -60,3 +60,22 @@ def test_catalog_conforms_to_its_json_schema():
 def test_invalid_catalogs_are_rejected(data, message):
     with pytest.raises(ValueError, match=message):
         CardDatabase.from_json(data)
+
+
+def test_real_catalog_conforms_to_schema_and_has_distinct_model_labels():
+    from database import NATURE_DB
+    jsonschema = pytest.importorskip('jsonschema')
+    schema = json.loads((REPOSITORY_ROOT / 'card_database_schema.json').read_text())
+    data = json.loads((REPOSITORY_ROOT / 'data' / 'nature_catalog.json').read_text())
+    jsonschema.validate(instance=data, schema=schema)
+    identifiers = set()
+    labels = set()
+    for organism in NATURE_DB.organisms.values():
+        assert not organism.is_demo
+        assert organism.id and organism.id not in identifiers
+        assert organism.scientific_name and organism.safety_message and organism.references
+        identifiers.add(organism.id)
+        for label in organism.model_labels:
+            assert label not in labels
+            labels.add(label)
+        assert NATURE_DB.build_card(organism).title == organism.name

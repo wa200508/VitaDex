@@ -221,3 +221,6 @@ __marimo__/
 !buildozer.spec
 .buildozer/
 bin/
+
+# Downloaded local identification model
+assets/models/*.tflite

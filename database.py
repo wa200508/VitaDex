@@ -40,6 +40,12 @@ class OrganismEntry:
     notes: str = ''
     physical_dimensions: str = ''
     habitat_type: str = ''
+    id: str = ''
+    scientific_name: str = ''
+    safety_message: str = ''
+    model_labels: List[str] = field(default_factory=list)
+    references: List[str] = field(default_factory=list)
+    is_demo: bool = True
 
 
 @dataclass
@@ -49,6 +55,11 @@ class Card:
     art_asset: str
     selected_moves: List[str]
     selected_details: Dict[str, str]
+    encounter_id: str = ''
+    observed_at: str = ''
+    photo_asset: str = ''
+    identification_source: str = 'legacy'
+    confidence: Optional[float] = None
 
     @property
     def card_art(self) -> str:
@@ -293,3 +304,6 @@ DEFAULT_DATABASE = {
 
 
 CARD_DB = CardDatabase.load_default()
+NATURE_DB = CardDatabase.from_json(
+    json.loads((Path(__file__).parent / 'data' / 'nature_catalog.json').read_text(encoding='utf-8'))
+)

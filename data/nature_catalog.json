@@ -1,0 +1,271 @@
+{
+  "background_templates": [
+    {
+      "id": "forest_emerald",
+      "name": "Forest Glow",
+      "style": "emerald",
+      "preview": "Forest",
+      "tags": [
+        "Bug",
+        "Plant",
+        "Forest"
+      ],
+      "description": "A soft green card background with forest leaf textures and glow accents."
+    },
+    {
+      "id": "stream_splash",
+      "name": "Stream Splash",
+      "style": "blue",
+      "preview": "Stream",
+      "tags": [
+        "Fish",
+        "Water",
+        "Freshwater"
+      ],
+      "description": "A cool blue water card backdrop with subtle current lines and splash details."
+    },
+    {
+      "id": "sunshine_halo",
+      "name": "Sunshine Halo",
+      "style": "gold",
+      "preview": "Sun",
+      "tags": [
+        "Plant",
+        "Meadow",
+        "Sun"
+      ],
+      "description": "A bright golden card frame with warm sun flares and floral highlights."
+    }
+  ],
+  "organisms": [
+    {
+      "id": "ladybird",
+      "name": "Ladybird beetle",
+      "type": "Bug",
+      "scientific_name": "Coccinellidae",
+      "model_labels": [
+        "ladybug"
+      ],
+      "description": "A small beetle with hard wing covers. Many ladybirds eat aphids; their colors and spots vary.",
+      "habitat": "Gardens, fields, and woodland edges",
+      "environment_role": "Many species help control aphids",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not pick it up or disturb the plant it is on.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Coccinellidae"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "bee",
+      "name": "Bee",
+      "type": "Bug",
+      "scientific_name": "Anthophila",
+      "model_labels": [
+        "bee"
+      ],
+      "description": "Bees visit flowers to collect pollen and nectar. Some live in colonies, while many live alone.",
+      "habitat": "Flower-rich gardens, meadows, and other habitats",
+      "environment_role": "Pollinates flowering plants",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Stay away from nests. Bees can sting; observe without touching.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Bee"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "ant",
+      "name": "Ant",
+      "type": "Bug",
+      "scientific_name": "Formicidae",
+      "model_labels": [
+        "ant"
+      ],
+      "description": "Ants have elbowed antennae and live in colonies. Workers gather food and care for the nest.",
+      "habitat": "Soil, leaf litter, trees, and many other habitats",
+      "environment_role": "Moves soil, disperses seeds, and recycles nutrients",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not disturb the nest. Some ants bite or sting.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Ant"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "grasshopper",
+      "name": "Grasshopper",
+      "type": "Bug",
+      "scientific_name": "Caelifera",
+      "model_labels": [
+        "grasshopper"
+      ],
+      "description": "Grasshoppers have strong hind legs for jumping. Most eat plants and are food for many birds and other animals.",
+      "habitat": "Grasslands, meadows, and gardens",
+      "environment_role": "Connects plants and predators in food webs",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Watch where it lands without grabbing it.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Grasshopper"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "mantis",
+      "name": "Praying mantis",
+      "type": "Bug",
+      "scientific_name": "Mantodea",
+      "model_labels": [
+        "mantis"
+      ],
+      "description": "Mantises have grasping front legs and usually wait quietly for prey. They eat other small animals.",
+      "habitat": "Vegetation in gardens, grasslands, and woodland",
+      "environment_role": "Insect predator",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not handle it or interfere with its prey.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Mantis"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "dragonfly",
+      "name": "Dragonfly",
+      "type": "Bug",
+      "scientific_name": "Anisoptera",
+      "model_labels": [
+        "dragonfly"
+      ],
+      "description": "Dragonflies usually rest with their wings spread. Their young live in water and adults hunt flying insects.",
+      "habitat": "Ponds, streams, wetlands, and nearby vegetation",
+      "environment_role": "Aquatic and aerial predator",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Stay on safe paths near water. Ask an adult before approaching a pond or stream.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Dragonfly"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "damselfly",
+      "name": "Damselfly",
+      "type": "Bug",
+      "scientific_name": "Zygoptera",
+      "model_labels": [
+        "damselfly"
+      ],
+      "description": "Damselflies are slender relatives of dragonflies. Most rest with their wings together, and their young live in water.",
+      "habitat": "Freshwater habitats and nearby plants",
+      "environment_role": "Aquatic and aerial predator",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Stay on safe paths near water. Observe its delicate wings without touching.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Damselfly"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "monarch",
+      "name": "Monarch butterfly",
+      "type": "Bug",
+      "scientific_name": "Danaus plexippus",
+      "model_labels": [
+        "monarch"
+      ],
+      "description": "Monarch butterflies have orange wings with black veins and borders. Their caterpillars feed on milkweed.",
+      "habitat": "Open areas with flowers and milkweed",
+      "environment_role": "Flower visitor and part of food webs",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not touch butterflies or taste milkweed. Similar-looking butterflies can be confused with monarchs.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Monarch_butterfly"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "cabbage-white",
+      "name": "Cabbage white butterfly group",
+      "type": "Bug",
+      "scientific_name": "Pieris",
+      "model_labels": [
+        "cabbage butterfly"
+      ],
+      "description": "Several white butterflies in this group have dark markings. Their caterpillars often feed on plants in the cabbage family.",
+      "habitat": "Gardens, fields, and open grassy areas",
+      "environment_role": "Flower visitor and food for predators",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not touch its wings. This category does not distinguish the species in the group.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Pieris_(butterfly)"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "snail",
+      "name": "Snail",
+      "type": "Invertebrate",
+      "scientific_name": "Gastropoda",
+      "model_labels": [
+        "snail"
+      ],
+      "description": "Snails move on a muscular foot and carry a shell. Different kinds live on land, in freshwater, or in the sea.",
+      "habitat": "Species-dependent: damp land, freshwater, or sea",
+      "environment_role": "Grazer, recycler, or predator depending on species",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not handle or eat it. Wash your hands if you accidentally touch it.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Snail"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "slug",
+      "name": "Slug",
+      "type": "Invertebrate",
+      "scientific_name": "Gastropoda",
+      "model_labels": [
+        "slug"
+      ],
+      "description": "Slugs are gastropods with reduced or absent external shells. Many land slugs are active in damp conditions.",
+      "habitat": "Often damp gardens, woods, and leaf litter",
+      "environment_role": "Recycler or plant eater depending on species",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not handle or eat it. Wash your hands if you accidentally touch it.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Slug"
+      ],
+      "is_demo": false
+    },
+    {
+      "id": "daisy",
+      "name": "Daisy-like flower",
+      "type": "Plant",
+      "scientific_name": "Asteraceae",
+      "model_labels": [
+        "daisy"
+      ],
+      "description": "A daisy-like flower head is made of many tiny flowers. The center and surrounding rays may look like one flower.",
+      "habitat": "Species-dependent: gardens, fields, and grasslands",
+      "environment_role": "Provides resources for flower-visiting insects",
+      "rarity": "Nature",
+      "notes": "A suggested visual category. It may include similar-looking organisms; verify with a trusted field guide.",
+      "safety_message": "Do not pick, taste, or use it as medicine. This visual category is not a species identification.",
+      "references": [
+        "https://en.wikipedia.org/wiki/Asteraceae"
+      ],
+      "is_demo": false
+    }
+  ],
+  "art_assets": []
+}

@@ -13,14 +13,34 @@
       "description": "Available card background templates.",
       "items": {
         "type": "object",
-        "required": ["id", "name", "style", "preview"],
+        "required": [
+          "id",
+          "name",
+          "style",
+          "preview"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "style": { "type": "string" },
-          "preview": { "type": "string" },
-          "tags": { "type": "array", "items": { "type": "string" } },
-          "description": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "style": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
         }
       }
     },
@@ -38,19 +58,75 @@
           "rarity"
         ],
         "properties": {
-          "name": { "type": "string" },
-          "type": { "type": "string" },
-          "move_set": { "type": "array", "items": { "type": "string" } },
-          "description": { "type": "string" },
-          "habitat": { "type": "string" },
-          "habitat_type": { "type": "string" },
-          "environment_role": { "type": "string" },
-          "physical_dimensions": { "type": "string" },
-          "rarity": { "type": "string" },
-          "related_forms": { "type": "array", "items": { "type": "string" } },
-          "lifecycle_stage": { "type": "string" },
-          "group": { "type": "string" },
-          "notes": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "move_set": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "habitat": {
+            "type": "string"
+          },
+          "habitat_type": {
+            "type": "string"
+          },
+          "environment_role": {
+            "type": "string"
+          },
+          "physical_dimensions": {
+            "type": "string"
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "related_forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lifecycle_stage": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "safety_message": {
+            "type": "string"
+          },
+          "model_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_demo": {
+            "type": "boolean"
+          }
         }
       }
     },
@@ -59,11 +135,24 @@
       "description": "Art prompts and image references associated with organisms.",
       "items": {
         "type": "object",
-        "required": ["organism_name", "prompt", "assets"],
+        "required": [
+          "organism_name",
+          "prompt",
+          "assets"
+        ],
         "properties": {
-          "organism_name": { "type": "string" },
-          "prompt": { "type": "string" },
-          "assets": { "type": "array", "items": { "type": "string" } }
+          "organism_name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     }
