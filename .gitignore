@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Android builds
+!buildozer.spec
+.buildozer/
+bin/
