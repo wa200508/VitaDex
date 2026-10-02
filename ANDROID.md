@@ -1,28 +1,48 @@
 # Android development
 
-Android is the first target platform. The README remains the product specification; the current build is explicitly a fictional-card demo, not a wildlife identification app. See `README_GAP_REPORT.md` for the missing product behavior.
+Android is the first target platform. The real-photo flow now suggests broad categories from a 12-entry nature catalog, asks for review, and saves photo cards locally. Fictional sample cards remain available through a separate demo. The README remains the product specification; see `README_GAP_REPORT.md` and `WORK_LOG.md` for remaining work.
 
-## Build the current demo
-
-Use a Linux development environment with the prerequisites documented by Buildozer and python-for-android (including Java 17, Git, zip/unzip, and native build tools). Install Buildozer in a separate development environment, then run:
+## Run on desktop
 
 ```sh
-python -m pip install buildozer
+python -m pip install -r requirements.txt
+python download_identification_model.py
+python main.py
+```
+
+Use **Scan a Photo → Choose Photo** to exercise the real local model. Desktop inference uses LiteRT; Android uses a native TensorFlow Lite Java bridge. `assets/models/MODEL.md` records the model source, checksum, preprocessing, and limitations.
+
+## Build for Android
+
+Use Linux with Java 17 and the native prerequisites documented by Buildozer/python-for-android. In an activated virtual environment, install Buildozer and the supported Cython version, download the model, and build:
+
+```sh
+python -m pip install buildozer 'Cython<3'
+python download_identification_model.py
 buildozer android debug
 ```
 
-Buildozer downloads the Android SDK/NDK and asks you to accept their licenses. The APK is written to `bin/`. With an Android device connected and USB debugging enabled:
+Buildozer downloads SDK/NDK tools and asks for their licenses. The build configuration pins python-for-android to `v2024.01.21` (Python 3.11), Kivy to 2.3.1, and the native TensorFlow Lite dependency to 2.16.1. The APK is written to `bin/`. With a device connected and USB debugging enabled:
 
 ```sh
 buildozer android deploy run logcat
 ```
 
-`buildozer.spec` includes the local JSON catalog and card assets. It intentionally packages only runtime dependencies; Hugging Face and JSON Schema are desktop tooling, not dependencies of the current app. No permissions are declared because the demo uses none. A build configuration is not evidence of a successful APK build or device test.
+The model binary is ignored by Git but explicitly included by the Android source-extension configuration when downloaded. The runtime has no model download or photo upload code. Hugging Face, JSON Schema, and desktop LiteRT are not Android runtime dependencies. Pillow and a standard-library float array prepare images on Android, avoiding a NumPy build requirement.
 
-## Android acceptance criteria for the real field guide
+The only declared permission is CAMERA, requested when the user chooses **Take Photo**. Import uses Android's system document picker and copies the selected URI into private storage without broad storage permissions. There are no microphone, location, or INTERNET permissions. Imported photos are resized and re-encoded without EXIF/GPS metadata.
 
-- Implement capture with an explicit user action and runtime camera permission. Denial must leave the card book usable. Stop capture and release resources when the app pauses; do not declare microphone or location permissions for photo identification.
-- Choose a mobile identification model and reviewed real-organism catalog with matching identifiers. Bundle or explicitly install model assets, perform bounded inference off the UI thread, and test airplane-mode behavior on a physical device. ComfyUI illustration checkpoints do not constitute an identification model.
-- Add optional, user-initiated narration through an offline-capable Android speech engine or bundled audio, with a Stop control and text fallback. Audio capture remains disabled by default.
-- Verify Android Back behavior, scrolling, density-aware sizing, large text, TalkBack, touch targets, journal persistence after process termination, and safe handling of denied permissions and model failures.
-- Measure inference latency, peak memory, battery use, and APK size on the minimum supported device. Validate the final release target SDK and model/native dependencies against Play requirements before release.
+## Current verification and build blocker
+
+Desktop tests, real-model inference, narrow-window Kivy rendering, journal persistence, and failed-save recovery pass. Both Java helpers compile against Android API 35 and the declared TensorFlow Lite artifacts; the PyJNIus byte/float bridge was checked with a desktop JVM.
+
+The full APK attempt stopped while downloading FreeType 2.10.1: `download.savannah.gnu.org` returned HTTP 403. Fix the dependency download using a trusted mirror/cache or a compatible build-toolchain update, then resume. No APK or physical-device runtime has been verified yet. Current SDK/NDK setup and the log are described in `WORK_LOG.md`.
+
+## Required Android device checks
+
+- Verify the native model and JPEG/PNG decoding with real photos in airplane mode; expand validation beyond the small starter catalog.
+- Test the system document picker on recent scoped-storage devices, cancellation, inaccessible URIs, and size limits.
+- Test camera permission denial and revocation, preview orientation, capture quality, repeated capture, and resource release when paused or dismissed. The Kivy 2.3.1 Android provider requires explicit hardware release after stopping its preview; this path needs device testing.
+- Verify Android Back, large text, density-aware touch targets, TalkBack, process termination, journal migrations, and failed storage writes. Cancelled/rejected scans must leave no new card.
+- Measure latency, peak memory, battery, APK size, and native-library support on the minimum supported device. Review the pinned toolchain, target SDK, and 16 KB page-size compatibility before release.
+- Add user-initiated local narration with Stop controls and text fallback, child-friendly settings, and reviewed factual content. Optional microphone capture remains unimplemented and permission-free by default.

@@ -21,9 +21,12 @@ Scan processing will be optimized for local execution wherever possible, minimiz
 ## Getting Started
 
 1. Install dependencies: `pip install -r requirements.txt`
-2. Download required local models for ComfyUI: `python download_models.py`
-   - If you use private Hugging Face models, set `HUGGINGFACEHUB_API_TOKEN` first.
+2. Download the local photo-identification model: `python download_identification_model.py`
 3. Launch the app: `python main.py`
+
+Android is the first target platform; see [ANDROID.md](ANDROID.md) for building and device checks. The current model suggests broad categories from a small starter catalog and asks you to review them before saving. See [README_GAP_REPORT.md](README_GAP_REPORT.md) for implementation status against the product requirements above.
+
+ComfyUI artwork integration remains planned. The separate `download_models.py --workflow PATH` tool requires a supplied workflow; its missing default workflow is not needed to run the current photo flow. Private Hugging Face repositories require `HUGGINGFACEHUB_API_TOKEN`.
 
 ## License
 
