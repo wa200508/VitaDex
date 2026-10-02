@@ -37,7 +37,7 @@ class JournalRepository:
                 rows = connection.execute(
                     'SELECT card_json FROM cards ORDER BY position ASC'
                 ).fetchall()
-        except sqlite3.Error as error:
+        except (sqlite3.Error, OSError) as error:
             raise JournalError(f'Could not read journal at {self.path}: {error}') from error
 
         try:
@@ -57,7 +57,7 @@ class JournalRepository:
                     'INSERT INTO cards(position, card_json) VALUES (?, ?)',
                     enumerate(serialized_cards),
                 )
-        except sqlite3.Error as error:
+        except (sqlite3.Error, OSError) as error:
             raise JournalError(f'Could not save journal at {self.path}: {error}') from error
 
     def _connect(self) -> sqlite3.Connection:
@@ -122,3 +122,26 @@ class JournalRepository:
             selected_moves=data['selected_moves'],
             selected_details=data['selected_details'],
         )
+
+
+class JournalSession:
+    """Keep the displayed collection consistent with durable local storage."""
+
+    def __init__(self, repository: JournalRepository):
+        self.repository = repository
+        self.error = None
+        try:
+            self.cards = repository.load_cards()
+        except JournalError as error:
+            self.cards = []
+            self.error = str(error)
+
+    def add_card(self, card: Card) -> None:
+        if self.error is not None:
+            raise JournalError(
+                'The existing journal could not be read. It has been kept unchanged. '
+                'Restore the journal before adding cards.'
+            )
+        updated_cards = [*self.cards, card]
+        self.repository.save_cards(updated_cards)
+        self.cards.append(card)
