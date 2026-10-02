@@ -40,7 +40,11 @@ class IdentificationResult:
     @property
     def has_confident_match(self) -> bool:
         candidate = self.top_candidate
-        return candidate is not None and candidate.confidence >= MINIMUM_CARD_CONFIDENCE
+        return (
+            self.source != 'demo'
+            and candidate is not None
+            and candidate.confidence >= MINIMUM_CARD_CONFIDENCE
+        )
 
 
 class IdentificationService(Protocol):
@@ -64,6 +68,6 @@ class DemoIdentificationService:
 
         organism = self.randomizer.choice(organisms)
         return IdentificationResult(
-            candidates=(IdentificationCandidate(organism=organism, confidence=1.0),),
+            candidates=(IdentificationCandidate(organism=organism, confidence=0.0),),
             source='demo',
         )

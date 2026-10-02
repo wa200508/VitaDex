@@ -1,5 +1,4 @@
 import os
-import time
 from pathlib import Path
 
 # Disable Kivy Inspector to prevent red dots on right-click
@@ -14,7 +13,6 @@ from kivy.properties import ListProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -22,8 +20,8 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
 
 from database import CARD_DB
-from identification import DemoIdentificationService, IdentificationResult
-from journal import JournalError, JournalRepository
+from identification import DEFAULT_SAFETY_MESSAGE, DemoIdentificationService, IdentificationResult
+from journal import JournalError, JournalRepository, JournalSession
 
 
 def build_wrapped_label(text, font_size='18sp', height=140):
@@ -42,7 +40,31 @@ def build_wrapped_label(text, font_size='18sp', height=140):
         label.text_size = (width, None)
 
     label.bind(width=update_text_size)
+    label.bind(texture_size=lambda instance, size: setattr(instance, 'height', max(height, size[1] + 16)))
     return label
+
+
+def scrollable_layout(layout):
+    layout.size_hint_y = None
+    layout.bind(minimum_height=layout.setter('height'))
+    scroll = ScrollView(do_scroll_x=False)
+    scroll.add_widget(layout)
+    return scroll
+
+
+def show_message(title, message):
+    content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+    body = BoxLayout(orientation='vertical')
+    body.add_widget(build_wrapped_label(message, height=100))
+    content.add_widget(scrollable_layout(body))
+    popup = Popup(title=title, content=content, size_hint=(0.94, 0.8))
+    content.add_widget(OutlineButton(
+        text='Close', size_hint_y=None, height=56, on_release=lambda *_: popup.dismiss(),
+    ))
+    app = App.get_running_app()
+    if app is not None:
+        app.active_popup = popup
+    popup.open()
 
 
 def styled_layout(layout):
@@ -139,6 +161,9 @@ class CardTile(ButtonBehavior, BoxLayout):
         ))
 
     def update_graphics(self, *args):
+        for child in self.children:
+            if isinstance(child, Label):
+                child.text_size = (max(1, self.width - 28), None)
         self._bg_rect.pos = self.pos
         self._bg_rect.size = self.size
         self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
@@ -147,16 +172,13 @@ class CardTile(ButtonBehavior, BoxLayout):
         self.on_open(self.card)
 
 
-class CardDetailView(ButtonBehavior, BoxLayout):
-    def __init__(self, on_tap=None, **kwargs):
+class CardDetailView(BoxLayout):
+    def __init__(self, **kwargs):
         kwargs.setdefault('orientation', 'vertical')
         kwargs.setdefault('padding', 16)
         kwargs.setdefault('spacing', 10)
         super().__init__(**kwargs)
-        self.on_tap = on_tap
         self.card = None
-        self.last_touch_time = 0
-        self.double_tap_threshold = 0.3
         with self.canvas.before:
             Color(0.06, 0.1, 0.18, 0.96)
             self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[24])
@@ -208,6 +230,9 @@ class CardDetailView(ButtonBehavior, BoxLayout):
         self.add_widget(self.meta_label)
         self.add_widget(self.details_label)
         self.add_widget(self.stats_label)
+        for label in (self.title_label, self.meta_label, self.details_label, self.stats_label):
+            label.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
+            label.bind(texture_size=lambda instance, size: setattr(instance, 'height', size[1] + 16))
 
     def update_graphics(self, *args):
         self._bg.pos = self.pos
@@ -224,49 +249,16 @@ class CardDetailView(ButtonBehavior, BoxLayout):
             return
         self.title_label.text = card.title
         self.meta_label.text = f'{card.organism.type} • {card.organism.rarity} • {card.background.name}'
-        self.details_label.text = f'{card.organism.description}\n\nMoves: {", ".join(card.selected_moves)}'
+        self.details_label.text = (
+            f'{card.organism.description}\n\nMoves: {", ".join(card.selected_moves)}'
+            f'\n\n{DEFAULT_SAFETY_MESSAGE}'
+        )
         self.stats_label.text = (
             f'Habitat: {card.selected_details["Habitat"]}\n'
             f'Size: {card.selected_details["Size"]}\n'
             f'Role: {card.organism.environment_role}\n'
             f'Notes: {card.organism.notes or "None"}'
         )
-
-    def _close_fullscreen(self):
-        app = App.get_running_app()
-        if hasattr(app, 'fullscreen_popup') and app.fullscreen_popup:
-            app.fullscreen_popup.dismiss()
-            app.fullscreen_popup = None
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            self.touch_start_pos = touch.pos
-            return super().on_touch_down(touch)
-        return super().on_touch_down(touch)
-
-    def on_touch_up(self, touch):
-        if self.collide_point(*touch.pos):
-            # Check for swipe (>60px movement)
-            if hasattr(self, 'touch_start_pos'):
-                dx = touch.x - self.touch_start_pos[0]
-                dy = touch.y - self.touch_start_pos[1]
-                distance = (dx**2 + dy**2) ** 0.5
-                if distance > 60:
-                    self._close_fullscreen()
-                    return True
-        return super().on_touch_up(touch)
-
-    def on_release(self):
-        if self.card:
-            current_time = time.time()
-            if current_time - self.last_touch_time < self.double_tap_threshold:
-                # Double tap - close fullscreen
-                self._close_fullscreen()
-            else:
-                # Single tap - open fullscreen
-                if self.on_tap:
-                    self.on_tap(self.card)
-            self.last_touch_time = current_time
 
 
 class HomeScreen(Screen):
@@ -287,14 +279,14 @@ class HomeScreen(Screen):
         ))
 
         layout.add_widget(build_wrapped_label(
-            'Scan creatures, collect cards, and build a nature collection that feels like a real card book.',
+            'Explore the VitaDex demo and collect sample cards. The sample creatures are fictional; this demo cannot identify wildlife.',
             font_size='17sp',
             height=140,
         ))
 
         button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=170, spacing=12)
         button_layout.add_widget(OutlineButton(
-            text='Start Scan',
+            text='Try Demo',
             size_hint=(1, None),
             height=72,
             on_release=self.goto_scan,
@@ -309,9 +301,10 @@ class HomeScreen(Screen):
 
         layout.add_widget(button_layout)
 
-        feature_box = BoxLayout(orientation='vertical', spacing=10)
+        feature_box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)
+        feature_box.bind(minimum_height=feature_box.setter('height'))
         feature_box.add_widget(Label(
-            text='• Easy scan flow for kids and grown-ups',
+            text='• Fictional sample creatures for exploring the card book',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -321,7 +314,7 @@ class HomeScreen(Screen):
             text_size=(Window.width - 40, None),
         ))
         feature_box.add_widget(Label(
-            text='• Cards appear automatically after each scan',
+            text='• Sample cards are saved on this device',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -331,7 +324,7 @@ class HomeScreen(Screen):
             text_size=(Window.width - 40, None),
         ))
         feature_box.add_widget(Label(
-            text='• Black background, white text, and clear outlines for readability',
+            text='• Observe wildlife from a safe distance; ask an adult for help',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -343,9 +336,10 @@ class HomeScreen(Screen):
 
         for child in feature_box.children:
             child.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
+            child.bind(texture_size=lambda instance, size: setattr(instance, 'height', max(28, size[1] + 12)))
 
         layout.add_widget(feature_box)
-        self.add_widget(layout)
+        self.add_widget(scrollable_layout(layout))
         self.update_new_card_badge()
 
     def update_new_card_badge(self):
@@ -371,7 +365,7 @@ class ScanScreen(Screen):
         layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=18))
 
         layout.add_widget(Label(
-            text='Scan',
+            text='Demo Cards',
             color=(1, 1, 1, 1),
             font_size='28sp',
             size_hint=(1, None),
@@ -382,14 +376,14 @@ class ScanScreen(Screen):
         ))
 
         layout.add_widget(build_wrapped_label(
-            'Scan creatures and let VitaDex create the card for your collection. ' 
-            'When the scan completes, you return to the main page with a new-card alert.',
+            'Create a randomly chosen sample card. These creatures are fictional and do not identify anything around you. '
+            + DEFAULT_SAFETY_MESSAGE,
             font_size='17sp',
             height=160,
         ))
 
         layout.add_widget(OutlineButton(
-            text='Scan Now',
+            text='Create Sample Card',
             size_hint=(1, None),
             height=68,
             on_release=self.perform_scan,
@@ -400,139 +394,65 @@ class ScanScreen(Screen):
             height=68,
             on_release=self.goto_home,
         ))
-        self.add_widget(layout)
+        self.add_widget(scrollable_layout(layout))
 
     def perform_scan(self, _=None):
         app = App.get_running_app()
         result = app.identification_service.identify()
         candidate = result.top_candidate
-        if not result.has_confident_match:
+        if result.source != 'demo' and not result.has_confident_match:
             self.show_no_match(result)
             return
 
-        assert candidate is not None
+        if candidate is None:
+            self.show_no_match(result)
+            return
         organism = candidate.organism
         card = CARD_DB.build_card(organism)
-        app.cards.append(card)
+        try:
+            app.journal_session.add_card(card)
+        except JournalError as error:
+            show_message('Card not saved', str(error))
+            return
         app.new_cards.append(card)
-        app.save_journal()
         app.card_book_screen.add_card(card)
-        self.show_scan_animation(card)
+        self.show_card_preview(card)
 
     def show_no_match(self, result: IdentificationResult):
         message = 'VitaDex could not find a match for this encounter.'
         if result.top_candidate is not None:
             message = 'VitaDex is not confident enough to identify this encounter.'
 
-        Popup(
-            title='Keep observing',
-            content=Label(
-                text=(
-                    f'{message} {result.safety_message}'
-                ),
-                halign='center',
-                valign='middle',
-                text_size=(Window.width * 0.75, None),
-            ),
-            size_hint=(0.8, None),
-            height=260,
-        ).open()
+        show_message('Keep observing', f'{message} {result.safety_message}')
 
-    def show_scan_animation(self, card):
-        preview = FloatLayout(size_hint=(0.9, None), height=220, pos_hint={'center_x': 0.5, 'center_y': 0.55}, opacity=0)
-        card_box = BoxLayout(orientation='vertical', padding=18, spacing=10, size_hint=(1, 1))
-        with card_box.canvas.before:
-            Color(0.08, 0.12, 0.2, 0.96)
-            RoundedRectangle(pos=card_box.pos, size=card_box.size, radius=[24])
-            Color(0.4, 0.75, 1, 0.12)
-            Line(rounded_rectangle=(card_box.x, card_box.y, card_box.width, card_box.height, 24), width=2)
-
-        def update_box(_, __):
-            card_box.canvas.before.clear()
-            with card_box.canvas.before:
-                Color(0.08, 0.12, 0.2, 0.96)
-                RoundedRectangle(pos=card_box.pos, size=card_box.size, radius=[24])
-                Color(0.4, 0.75, 1, 0.12)
-                Line(rounded_rectangle=(card_box.x, card_box.y, card_box.width, card_box.height, 24), width=2)
-
-        card_box.bind(pos=update_box, size=update_box)
-
-        card_box.add_widget(Label(
-            text='New card created!',
-            color=(1, 1, 1, 1),
-            font_size='22sp',
-            size_hint=(1, None),
-            height=30,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
+    def show_card_preview(self, card):
+        content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+        body = BoxLayout(orientation='vertical', spacing=12)
+        body.add_widget(build_wrapped_label(
+            'This fictional sample was chosen at random. It is not a wildlife identification.',
+            height=60,
         ))
-        card_box.add_widget(Label(
-            text=card.background.preview,
-            color=(1, 1, 1, 1),
-            font_size='48sp',
-            size_hint=(1, None),
-            height=90,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text=card.title,
-            color=(1, 1, 1, 1),
-            font_size='24sp',
-            bold=True,
-            size_hint=(1, None),
-            height=34,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text=f'{card.organism.type} • {card.organism.rarity} • {card.background.name}',
-            color=(0.7, 0.85, 1, 1),
-            font_size='16sp',
-            size_hint=(1, None),
-            height=26,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text='Tap anywhere to add this card to your collection',
-            color=(0.8, 0.9, 1, 1),
-            font_size='14sp',
-            size_hint=(1, None),
-            height=28,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
+        detail = CardDetailView()
+        detail.set_card(card)
+        detail.size_hint_y = None
+        detail.bind(minimum_height=detail.setter('height'))
+        body.add_widget(detail)
+        content.add_widget(scrollable_layout(body))
+        popup = Popup(title='Sample card saved', content=content, size_hint=(0.94, 0.94))
+        content.add_widget(OutlineButton(
+            text='Back to Home', size_hint_y=None, height=56,
+            on_release=lambda *_: popup.dismiss(),
         ))
 
-        preview.add_widget(card_box)
-        dismiss_area = Button(
-            background_normal='',
-            background_color=(0, 0, 0, 0),
-            size_hint=(1, 1),
-            on_release=lambda *_: self.dismiss_scan_preview(preview),
-        )
-        preview.add_widget(dismiss_area)
-        self.add_widget(preview)
-
-        Animation(opacity=1, d=0.35).start(preview)
-
-    def dismiss_scan_preview(self, preview):
-        def on_shrink_complete(*args):
-            self.remove_widget(preview)
+        def on_dismiss(*_):
             app = App.get_running_app()
             app.home_screen.update_new_card_badge()
             app.home_screen.collection_button.flash()
-            self.manager.transition = SlideTransition(direction='right')
-            self.manager.current = 'home'
+            self.goto_home()
 
-        shrink_anim = Animation(pos=(Window.width * 0.15, 32), size=(70, 40), opacity=0, d=0.35)
-        shrink_anim.bind(on_complete=on_shrink_complete)
-        shrink_anim.start(preview)
+        popup.bind(on_dismiss=on_dismiss)
+        App.get_running_app().active_popup = popup
+        popup.open()
 
     def goto_home(self, _=None):
         self.manager.transition = SlideTransition(direction='right')
@@ -575,7 +495,7 @@ class CardBookScreen(Screen):
         )
         root.add_widget(self.collection_status)
 
-        controls = BoxLayout(size_hint=(1, None), height=50, spacing=10)
+        controls = BoxLayout(orientation='vertical', size_hint=(1, None), height=174, spacing=8)
         controls.add_widget(OutlineButton(
             text='Sort A–Z',
             on_release=self.sort_by_name,
@@ -600,6 +520,7 @@ class CardBookScreen(Screen):
             row_force_default=True,
         )
         self.tiles_area.bind(minimum_height=self.tiles_area.setter('height'))
+        self.tiles_area.bind(width=lambda instance, width: setattr(instance, 'cols', max(1, int(width / 220))))
         tiles_scroll = ScrollView(size_hint=(1, 1), bar_width=8)
         tiles_scroll.add_widget(self.tiles_area)
         root.add_widget(tiles_scroll)
@@ -614,11 +535,14 @@ class CardBookScreen(Screen):
         content = BoxLayout(orientation='vertical', padding=20, spacing=14)
         detail = CardDetailView(size_hint=(1, 1))
         detail.set_card(card)
-        content.add_widget(detail)
+        content.add_widget(scrollable_layout(detail))
+        content.add_widget(OutlineButton(
+            text='Close', size_hint_y=None, height=56, on_release=lambda *_: popup.dismiss(),
+        ))
         popup = Popup(title=card.title, content=content, size_hint=(0.96, 0.96), auto_dismiss=True)
         popup.open()
         app = App.get_running_app()
-        app.fullscreen_popup = popup
+        app.active_popup = popup
 
     def refresh_cards(self):
         app = App.get_running_app()
@@ -631,7 +555,7 @@ class CardBookScreen(Screen):
 
         if not self.cards:
             self.tiles_area.add_widget(Label(
-                text='No discoveries yet. Start a scan to add your first card.',
+                text='No cards yet. Try the demo to add a sample card.',
                 color=(1, 1, 1, 1),
                 font_size='16sp',
                 halign='center',
@@ -679,9 +603,10 @@ class VitaDexApp(App):
             legacy_path=Path(self.user_data_dir) / 'journal.json',
         )
         self.identification_service = DemoIdentificationService(CARD_DB)
-        self.cards = self.load_journal()
+        self.journal_session = JournalSession(self.journal_repository)
+        self.cards = self.journal_session.cards
         self.new_cards = []
-        self.fullscreen_popup = None
+        self.active_popup = None
         self.home_screen = HomeScreen()
         self.scan_screen = ScanScreen()
         self.card_book_screen = CardBookScreen()
@@ -695,20 +620,25 @@ class VitaDexApp(App):
         manager.add_widget(self.card_book_screen)
         return manager
 
-    def load_journal(self):
-        try:
-            return self.journal_repository.load_cards()
-        except JournalError as error:
-            Logger.error(f'VitaDex: {error}')
-            return []
+    def on_start(self):
+        if self.journal_session.error:
+            Logger.error(f'VitaDex: {self.journal_session.error}')
+            show_message(
+                'Journal unavailable',
+                'Your existing journal could not be read. Adding cards is disabled to keep '
+                f'your saved discoveries safe. {self.journal_session.error}',
+            )
 
-    def save_journal(self):
-        try:
-            self.journal_repository.save_cards(self.cards)
-        except JournalError as error:
-            Logger.error(f'VitaDex: {error}')
-    
     def _on_keyboard(self, window, key, scancode, codepoint, modifier):
+        if key == 27:  # Android Back / desktop Escape
+            if self.active_popup is not None and self.active_popup.parent is not None:
+                self.active_popup.dismiss()
+                self.active_popup = None
+                return True
+            if self.root is not None and self.root.current != 'home':
+                self.root.transition = SlideTransition(direction='right')
+                self.root.current = 'home'
+                return True
         # Block F1 which opens the inspector and Ctrl+E
         if key == 282:  # F1
             return True

@@ -12,7 +12,7 @@ from identification import (
 )
 
 
-def test_demo_service_returns_a_local_catalog_match_with_safety_guidance():
+def test_demo_service_returns_a_sample_without_claiming_identification():
     service = DemoIdentificationService(CARD_DB, randomizer=random.Random(7))
 
     result = service.identify()
@@ -21,8 +21,8 @@ def test_demo_service_returns_a_local_catalog_match_with_safety_guidance():
     assert result.safety_message == DEFAULT_SAFETY_MESSAGE
     assert result.top_candidate is not None
     assert result.top_candidate.organism.name in CARD_DB.organisms
-    assert result.top_candidate.confidence == 1.0
-    assert result.has_confident_match
+    assert result.top_candidate.confidence == 0.0
+    assert not result.has_confident_match
 
 
 def test_low_confidence_candidate_is_available_to_the_scan_ui():
@@ -63,3 +63,12 @@ def test_candidate_confidence_must_be_a_probability(confidence):
 
     with pytest.raises(ValueError, match='between 0 and 1'):
         IdentificationCandidate(organism=organism, confidence=confidence)
+
+
+def test_demo_source_cannot_claim_a_confident_match():
+    organism = CARD_DB.get_organism('Glowleaf Beetle')
+    result = IdentificationResult(
+        candidates=(IdentificationCandidate(organism=organism, confidence=1.0),),
+        source='demo',
+    )
+    assert not result.has_confident_match
