@@ -26,6 +26,10 @@ Scan processing will be optimized for local execution wherever possible, minimiz
 
 Android is the first target platform; see [ANDROID.md](ANDROID.md) for building and device checks. The current model suggests broad categories from a small starter catalog and asks you to review them before saving. See [README_GAP_REPORT.md](README_GAP_REPORT.md) for implementation status against the product requirements above.
 
+For development test APK downloads and Ubuntu emulator setup, see
+[UBUNTU_EMULATOR.md](UBUNTU_EMULATOR.md). These snapshots are labeled VitaDex Test
+and are separate from official releases.
+
 ComfyUI artwork integration remains planned. The separate `download_models.py --workflow PATH` tool requires a supplied workflow; its missing default workflow is not needed to run the current photo flow. Private Hugging Face repositories require `HUGGINGFACEHUB_API_TOKEN`.
 
 ## License

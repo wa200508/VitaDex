@@ -224,3 +224,7 @@ bin/
 
 # Downloaded local identification model
 assets/models/*.tflite
+
+# Generated test-build identity and download bundles
+build_info.json
+artifacts/

@@ -30,6 +30,7 @@ from local_model import LocalIdentificationService
 from photos import PhotoStore
 from scan_jobs import ScanWorker
 from android_photos import AndroidPhotoPicker
+from build_identity import build_identity
 
 
 def build_wrapped_label(text, font_size='18sp', height=140):
@@ -307,9 +308,10 @@ class HomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(name='home', **kwargs)
         layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=18))
+        app_title, test_notice = build_identity()
 
         layout.add_widget(Label(
-            text='VitaDex',
+            text=app_title,
             color=(1, 1, 1, 1),
             font_size='36sp',
             bold=True,
@@ -319,6 +321,9 @@ class HomeScreen(Screen):
             valign='middle',
             text_size=(Window.width - 40, None),
         ))
+
+        if test_notice:
+            layout.add_widget(build_wrapped_label(test_notice, font_size='14sp', height=32))
 
         layout.add_widget(build_wrapped_label(
             'Explore nature with local photo suggestions and your personal card book. Suggestions can be wrong; observe safely and verify with a trusted field guide.',
@@ -864,6 +869,7 @@ class CardBookScreen(Screen):
 
 class VitaDexApp(App):
     def build(self):
+        self.title = build_identity()[0]
         # Disable Kivy Inspector (prevents red dots on right-click)
         from kivy.core.window import Window
         Window.bind(on_keyboard=self._on_keyboard)

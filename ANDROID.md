@@ -14,6 +14,12 @@ Use **Scan a Photo → Choose Photo** to exercise the real local model. Desktop 
 
 ## Build for Android
 
+For downloadable testing snapshots and an Ubuntu virtual phone, see
+[UBUNTU_EMULATOR.md](UBUNTU_EMULATOR.md). The `Android test APK` workflow builds
+separate emulator and phone debug APKs on the development branch, without
+creating an official release. Use `bash scripts/build_debug_apk.sh` for the
+same test build locally.
+
 Use Linux with Java 17 and the native prerequisites documented by Buildozer/python-for-android. In an activated virtual environment, install Buildozer and the supported Cython version, download the model, and build:
 
 ```sh
@@ -36,7 +42,11 @@ The only declared permission is CAMERA, requested when the user chooses **Take P
 
 Desktop tests, real-model inference, narrow-window Kivy rendering, journal persistence, and failed-save recovery pass. Both Java helpers compile against Android API 35 and the declared TensorFlow Lite artifacts; the PyJNIus byte/float bridge was checked with a desktop JVM.
 
-The full APK attempt stopped while downloading FreeType 2.10.1: `download.savannah.gnu.org` returned HTTP 403. Fix the dependency download using a trusted mirror/cache or a compatible build-toolchain update, then resume. No APK or physical-device runtime has been verified yet. Current SDK/NDK setup and the log are described in `WORK_LOG.md`.
+The earlier full APK attempt stopped while downloading FreeType 2.10.1:
+`download.savannah.gnu.org` returned HTTP 403. A local recipe now uses FreeType's
+official SourceForge mirror with a verified SHA-256, retaining the pinned recipe
+and version. A successful full build and emulator/device execution still need
+verification; the earlier setup and log are described in `WORK_LOG.md`.
 
 ## Required Android device checks
 

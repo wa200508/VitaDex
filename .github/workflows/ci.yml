@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, work]
+    branches: [main, work, development/readme-android]
 
 permissions:
   contents: read
@@ -37,7 +37,7 @@ jobs:
         run: python -m ruff check .
 
       - name: Compile Python sources
-        run: python -m compileall -q main.py database.py identification.py journal.py local_model.py photos.py scan_jobs.py android_photos.py download_identification_model.py download_models.py scripts tests
+        run: python -m compileall -q main.py build_identity.py database.py identification.py journal.py local_model.py photos.py scan_jobs.py android_photos.py download_identification_model.py download_models.py scripts tests
 
       - name: Run tests
         run: python -m pytest
