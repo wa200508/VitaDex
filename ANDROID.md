@@ -45,8 +45,10 @@ Desktop tests, real-model inference, narrow-window Kivy rendering, journal persi
 The earlier full APK attempt stopped while downloading FreeType 2.10.1:
 `download.savannah.gnu.org` returned HTTP 403. A local recipe now uses FreeType's
 official SourceForge mirror with a verified SHA-256, retaining the pinned recipe
-and version. A successful full build and emulator/device execution still need
-verification; the earlier setup and log are described in `WORK_LOG.md`.
+and version. GitHub Actions successfully produced both x86_64 and arm64-v8a
+debug APKs for commit `af86b8b`; the emulator download's checksum, bundled model,
+test identity, and debug manifest were inspected. Emulator/device execution
+still needs verification. See `WORK_LOG.md` for the build handoff.
 
 ## Required Android device checks
 

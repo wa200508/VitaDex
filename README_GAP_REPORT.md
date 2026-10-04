@@ -19,7 +19,7 @@ The README remains the product specification. Android is the first target platfo
 
 | Priority | Requirement | What remains |
 | --- | --- | --- |
-| 1 | Verified Android application | Resolve the FreeType dependency download HTTP 403, complete APK packaging, and test native inference, camera, document picker, permissions, and lifecycle on a physical Android device. Java compilation alone does not prove the app runs. |
+| 1 | Verified Android application | Debug APK packaging now succeeds for x86_64 emulators and arm64-v8a phones. Test startup and UI in the emulator, then native inference, camera, document picker, permissions, and lifecycle on a physical Android device. Packaging alone does not prove the app runs. |
 | 1 | Reliable nature identification | The general ImageNet model only suggests broad categories. Expand specialist-model and geographic validation, test unknown/unsupported input, and measure false confident matches. Never interpret scores as calibrated species certainty or edibility/safety advice. |
 | 1 | Reviewed nature catalog | The starter catalog has factual summaries and references but needs independent content review, broader coverage, and explicit model/taxon compatibility. Keep fictional snapshots marked separately. |
 | 2 | Audio descriptions | Add user-initiated offline speech or bundled narration, Stop controls, and a text equivalent. Microphone capture remains absent, with no microphone permission. |
@@ -34,3 +34,10 @@ The README remains the product specification. Android is the first target platfo
 The latest check passed 53 tests, Ruff, and Python compilation on Python 3.12. Tests cover catalog/schema invariants, conservative model output handling, real downloaded-model inference, label alignment, model-download integrity, private photo handling, scan cancellation/failure/shutdown, journal protections, and version-1 migration.
 
 A Kivy flow rendered at phone-sized windows and exercised a real photo, suggested-match review, simulated disk-full recovery, persistence, separate fictional samples, and Back navigation. Native Java helpers compiled against Android API 35/TensorFlow Lite 2.16.1, and a PyJNIus byte/float round trip passed. A small real-flower corpus check demonstrates category breadth, not species accuracy. Details and restart instructions are in `WORK_LOG.md`.
+
+On October 3, 2026 (America/New_York), GitHub Actions built x86_64 and arm64-v8a
+debug APKs for `af86b8b`; Python 3.11/3.12 CI passed. The downloaded emulator APK
+passed checksum and packaged-model verification, and its manifest confirms
+`VitaDex Test`, `org.vitadex.vitadextest`, debug mode, and CAMERA as its only
+permission. The native build succeeds with the checksum-pinned FreeType mirror.
+No emulator or physical-device runtime test has been performed in this session.

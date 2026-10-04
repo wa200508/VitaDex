@@ -73,3 +73,30 @@ python main.py
 ```
 
 If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for the Python commands. Android build/device instructions are in `ANDROID.md`; model details are in `assets/models/MODEL.md`; the current requirement-by-requirement status is in `README_GAP_REPORT.md`.
+
+## Testing APK handoff — October 3, 2026 (America/New_York)
+
+- Commits `c1eb748` and `af86b8b` add the `Android test APK` workflow, a separate
+  Buildozer test profile, build identity, and an optional Ubuntu emulator setup
+  script. No emulator installation was run. No release or tag was created, and
+  main was not changed.
+- Both debug APKs built successfully in
+  [workflow run 37167263231](https://github.com/wa200508/VitaDex/actions/runs/37167263231).
+  Choose `x86_64` for the Ubuntu emulator, `arm64-v8a` for a phone. Artifacts
+  contain the APK, SHA256SUMS, build identity, and Ubuntu guide; retention is 30 days.
+- The app is named VitaDex Test, uses `org.vitadex.vitadextest`, shows its source
+  commit, and has a separate journal. Debug signing keys may change between
+  clean builds; see the guide before uninstalling an older test app.
+- FreeType 2.10.1 now uses the official SourceForge mirror. Its archive was
+  downloaded and matched Buildroot's published SHA-256. CI uses an isolated
+  SDK with Command-Line Tools 12.0, Build Tools 35.0.0, Java 17, NDK r25b, and
+  the existing pinned p4a version. Kivy 2.3.1's filetype dependency is explicit.
+- Local checks passed all 53 tests with the downloaded real model, Ruff, Python
+  compilation, shell syntax, and actionlint. GitHub Python 3.11/3.12 CI passed.
+- The downloaded x86_64 bundle passed APK checksum, x86_64 runtime and packaged
+  model checks. Its manifest confirms the test name/package, debug flag, and
+  CAMERA as the only permission. Local Codex/agent/Git directories are excluded.
+- Remaining: actually launch and exercise the APK in an emulator, then test
+  native inference and physical-device camera/import/lifecycle behavior. The
+  earlier FreeType blocker is resolved; the other model/content/accessibility
+  gaps remain. Ubuntu commands are in `UBUNTU_EMULATOR.md`.
