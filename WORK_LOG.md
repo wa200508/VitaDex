@@ -144,3 +144,14 @@ If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for t
 - Validation: 83 tests passed, Ruff/compile/diff checks passed; rendered the three-page
   Letter proof and inspected each page. Android builds and device save/print checks
   remain to be verified. No hosting endpoint or scientific approvals were fabricated.
+- Both initial APK compilation paths were exercised; inspection of the ARM artifact
+  found host Linux extensions from unpinned encoding dependencies. Added a pure-Python
+  charset-normalizer recipe, pinned chardet to its portable 5.2.0 release, and added a
+  pre-upload APK check for ELF architecture/glibc contamination and PDF assets. The
+  verifier correctly rejects the initial artifact; do not use d157f6b as the final proof.
+- Prepared four separate source-cited draft entries at the user's request (giraffes,
+  sunflower, baker's yeast, E. coli), with exact wording and a source register. None is
+  marked reviewed or mapped to the current recognizer; editorial drafts are excluded
+  from the APK. Added Android Save-dialog callback/cancellation tests.
+- Current local validation: 87 tests pass. Letter and A4/long-text PDF proofs were
+  rendered and visually inspected. Hosting remains a pending user choice.

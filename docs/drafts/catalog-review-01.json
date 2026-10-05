@@ -1,0 +1,181 @@
+{
+  "background_templates": [
+    {
+      "id": "forest_emerald",
+      "name": "Forest Glow",
+      "style": "emerald",
+      "preview": "Forest",
+      "tags": [
+        "Bug",
+        "Plant",
+        "Forest"
+      ],
+      "description": "A soft green card background with forest leaf textures and glow accents."
+    },
+    {
+      "id": "stream_splash",
+      "name": "Stream Splash",
+      "style": "blue",
+      "preview": "Stream",
+      "tags": [
+        "Fish",
+        "Water",
+        "Freshwater"
+      ],
+      "description": "A cool blue water card backdrop with subtle current lines and splash details."
+    },
+    {
+      "id": "sunshine_halo",
+      "name": "Sunshine Halo",
+      "style": "gold",
+      "preview": "Sun",
+      "tags": [
+        "Plant",
+        "Meadow",
+        "Sun"
+      ],
+      "description": "A bright golden card frame with warm sun flares and floral highlights."
+    }
+  ],
+  "organisms": [
+    {
+      "id": "giraffa",
+      "name": "Giraffes",
+      "scientific_name": "Giraffa",
+      "type": "Mammal",
+      "group": "Mammal",
+      "description": "Giraffes are tall African mammals. They browse on trees and shrubs, eating leaves and shoots.",
+      "habitat": "Parts of sub-Saharan Africa.",
+      "environment_role": "As plant-eating browsers, giraffes consume woody plants rather than mainly grazing on grass.",
+      "physical_dimensions": "",
+      "notes": "This card covers the genus. An IUCN specialist assessment recognized four giraffe species in 2025.",
+      "rarity": "Nature",
+      "is_demo": false,
+      "revision": 1,
+      "review_status": "draft",
+      "model_labels": [],
+      "fact_sources": {
+        "description": [
+          "https://iucn.org/press-release/202508/four-giraffe-species-officially-recognised-major-conservation-reclassification",
+          "https://giraffeconservation.org/facts-about-giraffe/what-do-giraffe-eat/"
+        ],
+        "habitat": [
+          "https://giraffeconservation.org/wp-content/uploads/2025/01/GCF-Nature-Workbook-2022-LR-compressed.pdf"
+        ],
+        "environment_role": [
+          "https://giraffeconservation.org/facts-about-giraffe/what-do-giraffe-eat/"
+        ],
+        "notes": [
+          "https://iucn.org/press-release/202508/four-giraffe-species-officially-recognised-major-conservation-reclassification"
+        ]
+      },
+      "references": [
+        "https://iucn.org/press-release/202508/four-giraffe-species-officially-recognised-major-conservation-reclassification",
+        "https://giraffeconservation.org/facts-about-giraffe/what-do-giraffe-eat/",
+        "https://giraffeconservation.org/wp-content/uploads/2025/01/GCF-Nature-Workbook-2022-LR-compressed.pdf"
+      ]
+    },
+    {
+      "id": "helianthus-annuus",
+      "name": "Common sunflower",
+      "scientific_name": "Helianthus annuus",
+      "type": "Plant",
+      "group": "Plant",
+      "description": "A sunflower head contains many tiny flowers. The central flowers develop into the familiar sunflower seeds.",
+      "habitat": "An annual plant native to the southwestern United States and Mexico; also widely cultivated.",
+      "environment_role": "Its seeds are used for food and oil, and processing leftovers can be used as feed.",
+      "physical_dimensions": "Often around 2 metres tall; cultivated varieties differ.",
+      "notes": "",
+      "rarity": "Nature",
+      "is_demo": false,
+      "revision": 1,
+      "review_status": "draft",
+      "model_labels": [],
+      "fact_sources": {
+        "description": [
+          "https://www.kew.org/plants/sunflower"
+        ],
+        "habitat": [
+          "https://powo.science.kew.org/taxon/119003-2"
+        ],
+        "environment_role": [
+          "https://www.kew.org/plants/sunflower"
+        ],
+        "physical_dimensions": [
+          "https://www.kew.org/plants/sunflower"
+        ]
+      },
+      "references": [
+        "https://www.kew.org/plants/sunflower",
+        "https://powo.science.kew.org/taxon/119003-2"
+      ]
+    },
+    {
+      "id": "saccharomyces-cerevisiae",
+      "name": "Baker's yeast",
+      "scientific_name": "Saccharomyces cerevisiae",
+      "type": "Fungus",
+      "group": "Fungus",
+      "description": "This yeast is a single-celled fungus. During fermentation it can turn sugars into alcohol and carbon dioxide.",
+      "habitat": "Found in human-managed fermentations and natural settings including soil and plant surfaces.",
+      "environment_role": "Its fermentation activity is used in bread-making and other food and beverage production.",
+      "physical_dimensions": "",
+      "notes": "Its natural ecology is still studied; do not describe fruit as its one established natural niche.",
+      "rarity": "Nature",
+      "is_demo": false,
+      "revision": 1,
+      "review_status": "draft",
+      "model_labels": [],
+      "fact_sources": {
+        "description": [
+          "https://doi.org/10.3934/microbiol.2020001"
+        ],
+        "habitat": [
+          "https://doi.org/10.3934/microbiol.2020001"
+        ],
+        "environment_role": [
+          "https://doi.org/10.3934/microbiol.2020001"
+        ],
+        "notes": [
+          "https://doi.org/10.1093/femsyr/fov009"
+        ]
+      },
+      "references": [
+        "https://doi.org/10.3934/microbiol.2020001",
+        "https://doi.org/10.1093/femsyr/fov009"
+      ]
+    },
+    {
+      "id": "escherichia-coli",
+      "name": "E. coli",
+      "scientific_name": "Escherichia coli",
+      "type": "Bacterium",
+      "group": "Bacterium",
+      "description": "E. coli are bacteria. Many kinds live harmlessly in intestines, while some kinds can cause illness.",
+      "habitat": "Found in intestines and also in settings such as water, food and the wider environment.",
+      "environment_role": "Harmless intestinal kinds can contribute to digestion and vitamin production.",
+      "physical_dimensions": "",
+      "notes": "",
+      "rarity": "Nature",
+      "is_demo": false,
+      "revision": 1,
+      "review_status": "draft",
+      "model_labels": [],
+      "fact_sources": {
+        "description": [
+          "https://www.cdc.gov/ecoli/about/index.html"
+        ],
+        "habitat": [
+          "https://www.cdc.gov/ecoli/about/index.html"
+        ],
+        "environment_role": [
+          "https://www.cdc.gov/ecoli/about/index.html"
+        ]
+      },
+      "references": [
+        "https://www.cdc.gov/ecoli/about/index.html"
+      ]
+    }
+  ],
+  "art_assets": []
+}

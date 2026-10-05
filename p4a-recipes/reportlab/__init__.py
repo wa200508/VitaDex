@@ -10,8 +10,7 @@ class ReportLabRecipe(PythonRecipe):
            '42cf24aee570a80e1903221ae3a92a2e34c324794a392eb036cbb6dc3839/'
            'reportlab-{version}.tar.gz')
     sha256sum = '7cf487764294ee791a4781f5a157bebce262a666ae4bbb87786760a9676c9378'
-    depends = ['setuptools', 'pillow']
-    python_depends = ['charset-normalizer']
+    depends = ['setuptools', 'pillow', 'charset-normalizer']
     call_hostpython_via_targetpython = False
 
     def prebuild_arch(self, arch):

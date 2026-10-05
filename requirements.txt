@@ -5,3 +5,4 @@ numpy>=1.26.0
 Pillow>=10.0.0
 ai-edge-litert>=2.0.0
 reportlab==4.4.9
+charset-normalizer==3.4.4

@@ -28,6 +28,7 @@ buildozer --profile test android debug
 # Only distribute an APK from this invocation's test profile/ABI.
 apk="bin/vitadextest-$APP_VERSION-$arch-debug.apk"
 test -f "$apk"
+python scripts/verify_apk.py "$apk" --arch "$arch"
 mkdir -p artifacts
 destination="artifacts/vitadex-test-$arch-$short_commit.apk"
 cp "$apk" "$destination"
