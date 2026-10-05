@@ -129,3 +129,18 @@ If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for t
   Current suggestions retain Save/Discard; AI remains the final delivery priority.
 - Validation: all 69 tests passed (including local-model inference); Ruff, compilation
   and diff checks passed. The new Kivy screen has not been tested in an emulator/device.
+
+## Safe catalog storage and printable cards (2026-10-04)
+
+- Implemented bounded HTTPS manifest/bundle downloads, same-origin/no-redirect policy,
+  checksums, publication validation, rollback rejection, and transactional two-release
+  SQLite storage. Startup reads only the local cache with previous/bundled fallback.
+- Added immutable publication and explicit updater commands; retired direct overwrites
+  of the bundled database. New unsupported recognition labels no longer prevent startup.
+- Added offline Letter/A4 PDF export from saved cards with matched front/back pages,
+  2.5 x 3.5 inch trim, bleed/cut marks, embedded fonts and complete facts/references.
+  Android uses a document destination picker; PDF work and writes run off the UI thread.
+- Added a pinned pure-Python ReportLab Android recipe, avoiding the legacy native recipe.
+- Validation: 83 tests passed, Ruff/compile/diff checks passed; rendered the three-page
+  Letter proof and inspected each page. Android builds and device save/print checks
+  remain to be verified. No hosting endpoint or scientific approvals were fabricated.

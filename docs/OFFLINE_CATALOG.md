@@ -1,7 +1,6 @@
 # VitaDex: curated knowledge, private encounters
 
-Status: proposed hosting architecture; first local artwork implementation. No server is
-provisioned and no background synchronization runs in the app yet.
+Status: hosting architecture plus local artwork, validated offline catalog caching, publication/update commands, and single-card PDF export. No server is provisioned and no background synchronization runs in the app yet. See CATALOG_OPERATIONS.md and PRINTING.md for current usage.
 
 ## Product boundary
 
@@ -100,7 +99,7 @@ Personal photos, location and collection contents never upload for catalog updat
 Account backup/multi-device sync is a separate opt-in project with encryption, deletion,
 conflict rules and explicit consent; it is not needed for catalog distribution.
 
-## Print export design (next milestone, not implemented)
+## Print export design (single-card baseline implemented; remaining options planned)
 
 Add “Export for printing” to card detail and collection selection. Generate an offline
 PDF from the stored fact revision and selected local artwork. Offer a single-card
@@ -130,8 +129,7 @@ page overflow, duplex orientation, offline operation and real printed samples.
 4. Implement PDF export/system save flow and visually verify print proofs.
 5. Upgrade/evaluate recognition coverage, then test the full collection flow on devices.
 
-No completed scientific review, hosted sync, broad recognition, or PDF export is implied
-by the first milestone. These need their own implementation and acceptance evidence.
+Scientific review, hosted sync, broad recognition, multi-card printing and on-device validation remain outstanding. Single-card PDFs have desktop tests and rendered proof inspection.
 
 ## Primary references
 

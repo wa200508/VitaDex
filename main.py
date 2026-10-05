@@ -24,12 +24,15 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
 
 from database import CARD_DB, NATURE_DB
+from catalog_updates import CatalogCache
 from identification import DEFAULT_SAFETY_MESSAGE, DemoIdentificationService, IdentificationResult
 from journal import JournalError, JournalRepository, JournalSession
 from local_model import LocalIdentificationService
 from photos import PhotoStore
 from scan_jobs import ScanWorker
 from android_photos import AndroidPhotoPicker
+from android_documents import AndroidDocumentPicker, write_document
+from export_jobs import ExportWorker
 from build_identity import build_identity
 from field_guide import TOPICS, introduction, read_topic
 
@@ -601,7 +604,7 @@ class ScanScreen(Screen):
     def review_match(self, encounter, result):
         app = App.get_running_app()
         candidate = result.top_candidate
-        card = NATURE_DB.build_card(candidate.organism)
+        card = app.nature_catalog.build_card(candidate.organism)
         card.encounter_id = encounter.id
         card.observed_at = encounter.observed_at
         card.photo_asset = str(encounter.photo_path.relative_to(Path(app.user_data_dir)))
@@ -855,6 +858,10 @@ class CardBookScreen(Screen):
         detail.set_card(card)
         content.add_widget(scrollable_layout(detail))
         content.add_widget(OutlineButton(
+            text='Export for printing', size_hint_y=None, height=56,
+            on_release=lambda *_: App.get_running_app().choose_export(card),
+        ))
+        content.add_widget(OutlineButton(
             text='Close', size_hint_y=None, height=56, on_release=lambda *_: popup.dismiss(),
         ))
         popup = Popup(title=card.title, content=content, size_hint=(0.96, 0.96), auto_dismiss=True)
@@ -921,11 +928,15 @@ class VitaDexApp(App):
             legacy_path=Path(self.user_data_dir) / 'journal.json',
         )
         self.demo_identification_service = DemoIdentificationService(CARD_DB)
-        self.identification_service = LocalIdentificationService(NATURE_DB)
+        self.nature_catalog = CatalogCache(Path(self.user_data_dir) / 'catalog').load(NATURE_DB)
+        self.identification_service = LocalIdentificationService(self.nature_catalog)
         self.photo_store = PhotoStore(Path(self.user_data_dir) / 'photos')
         schedule = lambda callback: Clock.schedule_once(lambda _: callback(), 0)
         self.scan_worker = ScanWorker(self.photo_store, self.identification_service, schedule)
         self.photo_picker = AndroidPhotoPicker(schedule)
+        self.document_picker = AndroidDocumentPicker(schedule)
+        self.export_worker = ExportWorker(Path(self.user_data_dir), schedule)
+        self.export_pending = False
         self.journal_session = JournalSession(self.journal_repository)
         self.cards = self.journal_session.cards
         self.new_cards = []
@@ -944,6 +955,73 @@ class VitaDexApp(App):
         manager.add_widget(self.demo_screen)
         manager.add_widget(self.card_book_screen)
         return manager
+
+    def choose_export(self, card):
+        if self.export_pending or self.export_worker.busy:
+            show_message('Export in progress', 'Finish the current export before starting another.')
+            return
+        content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+        content.add_widget(build_wrapped_label(
+            'Export a 2.5 x 3.5 inch card front and back, plus full facts and references. '
+            'Print at 100% and test duplex alignment before ordering copies.', height=140))
+        popup = Popup(title='Print layout', content=content, size_hint=(0.9, 0.65))
+
+        def start(paper):
+            popup.dismiss()
+            self.export_pending = True
+            self.export_worker.start(card, paper, self.export_ready, self.export_failed)
+
+        for paper in ('Letter', 'A4'):
+            content.add_widget(OutlineButton(text=paper, size_hint_y=None, height=52,
+                                            on_release=lambda _, value=paper: start(value)))
+        content.add_widget(OutlineButton(text='Cancel', size_hint_y=None, height=52,
+                                        on_release=lambda *_: popup.dismiss()))
+        track_popup(popup)
+        popup.open()
+
+    def export_failed(self, message):
+        self.export_pending = False
+        show_message('Export unavailable', str(message))
+
+    def export_ready(self, result):
+        if platform != 'android':
+            self.export_pending = False
+            show_message('PDF ready', f'Saved to {result.path}\n\n' + '\n'.join(result.warnings))
+            return
+
+        def cancelled():
+            self.export_pending = False
+            result.path.unlink(missing_ok=True)
+
+        def failed(message):
+            cancelled()
+            self.export_failed(message)
+
+        def selected(uri):
+            future = self.export_worker.executor.submit(write_document, result.path, uri)
+
+            def done(completed):
+                try:
+                    completed.result()
+                    message = None
+                except Exception as error:
+                    message = str(error)
+                result.path.unlink(missing_ok=True)
+
+                def finish(_):
+                    self.export_pending = False
+                    if message:
+                        show_message('PDF not saved', message)
+                    else:
+                        show_message('PDF saved', '\n'.join(result.warnings))
+                if not self.export_worker.closed:
+                    Clock.schedule_once(finish, 0)
+            future.add_done_callback(done)
+
+        try:
+            self.document_picker.create('vitadex-card.pdf', selected, failed, cancelled)
+        except Exception as error:
+            failed(str(error))
 
     def on_start(self):
         if self.journal_session.error:
@@ -966,6 +1044,8 @@ class VitaDexApp(App):
     def on_stop(self):
         self.scan_worker.close()
         self.photo_picker.cancel()
+        self.document_picker.cancel()
+        self.export_worker.close()
         self.scan_screen.release_camera()
         if self.scan_screen.review_popup is not None:
             self.scan_screen.review_popup.dismiss()

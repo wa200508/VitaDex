@@ -3,11 +3,11 @@ title = VitaDex
 package.name = vitadex
 package.domain = org.vitadex
 source.dir = .
-source.include_exts = py,json,svg,png,jpg,jpeg,kv,atlas,ttf,wav,ogg,tflite
-source.exclude_dirs = tests,scripts,.git,.github,.codex,.agents,.aws,.pytest_cache,.ruff_cache,__pycache__,.venv,android_src,p4a-recipes,artifacts
+source.include_exts = py,json,svg,png,jpg,jpeg,kv,atlas,ttf,txt,wav,ogg,tflite
+source.exclude_dirs = tests,scripts,.git,.github,.codex,.agents,.aws,.pytest_cache,.ruff_cache,__pycache__,.venv,android_src,p4a-recipes,artifacts,tmp,output
 source.exclude_patterns = download_models.py
 version = 0.1.0
-requirements = python3,kivy==2.3.1,filetype,pillow,pyjnius
+requirements = python3,kivy==2.3.1,filetype,pillow,pyjnius,reportlab==4.4.9,charset-normalizer
 orientation = portrait
 fullscreen = 0
 # Photo capture requests CAMERA on demand; importing uses the system document picker.

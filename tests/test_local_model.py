@@ -96,3 +96,14 @@ def test_checked_in_labels_match_the_pinned_models_embedded_order():
     with zipfile.ZipFile(MODEL_DIRECTORY / MODEL_FILENAME) as model:
         embedded = model.read('labels_without_background.txt').decode().splitlines()
     assert json.loads((MODEL_DIRECTORY / 'labels.json').read_text()) == embedded
+
+
+def test_new_catalog_taxa_do_not_break_an_older_model():
+    from copy import deepcopy
+    catalog = deepcopy(NATURE_DB)
+    organism = next(iter(catalog.organisms.values()))
+    known = organism.model_labels[0]
+    organism.model_labels.append('future-model-only-organism')
+    service = LocalIdentificationService(catalog)
+    assert service.organisms_by_label[known] is organism
+    assert 'future-model-only-organism' not in service.organisms_by_label

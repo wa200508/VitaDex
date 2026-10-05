@@ -39,5 +39,7 @@ The concept and descriptive content in this README are intended to support this 
 ## Offline catalog direction
 
 See [the architecture and delivery plan](docs/OFFLINE_CATALOG.md) for curated facts,
-battery-friendly catalog updates, private cartoon artwork and planned print export.
-Current nature entries are drafts; hosted synchronization and PDF export are not yet implemented.
+battery-friendly catalog updates, private cartoon artwork and print export.
+Current nature entries are drafts. Safe catalog caching and single-card PDF export are implemented; hosted Android synchronization remains pending.
+
+See [catalog operations](docs/CATALOG_OPERATIONS.md) and [printing](docs/PRINTING.md).

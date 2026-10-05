@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.Uri;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -25,6 +27,16 @@ public final class PhotoIO {
         } catch (IOException error) {
             target.delete();
             throw error;
+        }
+    }
+    /** Write only to a document URI explicitly selected by the user. */
+    public static void writeUri(Context context, String sourcePath, String uri) throws IOException {
+        try (InputStream source = new FileInputStream(sourcePath);
+                OutputStream output = context.getContentResolver().openOutputStream(Uri.parse(uri), "wt")) {
+            if (output == null) throw new IOException("The selected destination is unavailable");
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = source.read(buffer)) != -1) output.write(buffer, 0, count);
         }
     }
 }

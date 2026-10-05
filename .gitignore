@@ -228,3 +228,7 @@ assets/models/*.tflite
 # Generated test-build identity and download bundles
 build_info.json
 artifacts/
+
+# Generated print proofs
+tmp/pdfs/
+output/pdf/

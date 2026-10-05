@@ -87,6 +87,8 @@ class LocalIdentificationService:
             if organism.is_demo:
                 raise ModelError('Fictional entries cannot be used for local identification.')
             for label in organism.model_labels:
+                if label not in self.labels:
+                    continue  # Catalog updates may describe taxa this model cannot recognize.
                 if self.labels.count(label) != 1 or label in self.organisms_by_label:
                     raise ModelError(f'Invalid or duplicate model label: {label}')
                 self.organisms_by_label[label] = organism

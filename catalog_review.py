@@ -17,10 +17,22 @@ def validate_publication(data: dict, reviews: dict) -> None:
     """
     catalog = CardDatabase.from_json(data)
     ids = set()
+    model_labels = set()
     for entry in catalog.organisms.values():
         if not entry.id or entry.id in ids:
             raise ValueError('Publication requires unique stable organism IDs.')
         ids.add(entry.id)
+        if not isinstance(entry.model_labels, list) or any(
+                not isinstance(label, str) or not label for label in entry.model_labels):
+            raise ValueError(f'{entry.id}: invalid model labels.')
+        for label in entry.model_labels:
+            if label in model_labels:
+                raise ValueError(f'{entry.id}: ambiguous model label {label}.')
+            model_labels.add(label)
+        if not isinstance(entry.fact_sources, dict) or not isinstance(entry.references, list):
+            raise ValueError(f'{entry.id}: invalid source metadata.')
+        if not all(isinstance(getattr(entry, field), str) for field in FACT_FIELDS):
+            raise ValueError(f'{entry.id}: fact fields must be text.')
         if entry.is_demo or entry.review_status != 'reviewed':
             raise ValueError(f'{entry.id}: only reviewed non-demo entries may be published.')
         if type(entry.revision) is not int or entry.revision < 1:
