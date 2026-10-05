@@ -116,3 +116,16 @@ If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for t
   remain subsequent milestones, explicitly documented rather than advertised as live.
 - Validation: 60 tests passed, including real local-model inference; Ruff, Python
   compilation and diff whitespace checks passed. No emulator/device run performed.
+
+## Field-guide interaction and future discussion hooks (2026-10-04)
+
+- Added automatic catalog introduction in card detail and an offline “Explore this
+  organism” view with fixed topic questions and source display.
+- Added immutable reviewed evidence requests and optional discussion/narration protocols.
+  The discussion boundary renders stored passages only, rejects invented evidence IDs,
+  and refuses draft/fictional/uncited material. No AI or speech provider is enabled.
+- Documented automatic encounter logging as dependent on recognition validation, device
+  TTS, optional local/cloud adapters, consent boundaries and grounding limitations.
+  Current suggestions retain Save/Discard; AI remains the final delivery priority.
+- Validation: all 69 tests passed (including local-model inference); Ruff, compilation
+  and diff checks passed. The new Kivy screen has not been tested in an emulator/device.

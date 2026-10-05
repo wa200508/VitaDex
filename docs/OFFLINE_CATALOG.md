@@ -142,3 +142,52 @@ by the first milestone. These need their own implementation and acceptance evide
 - Darwin Core taxonomy vocabulary: https://dwc.tdwg.org/terms/
 - GBIF taxonomy release migration context:
   https://data-blog.gbif.org/post/catalogue-of-life-taxonomic-backbone/
+
+## Pokédex-style encounters and optional discussion
+
+The intended experience is capture → identify → open the organism's introduction →
+explore questions. The first reading is deterministic catalog text, not generated text.
+The field-guide UI now exposes local topic questions and shows sources when a topic has
+reviewed attribution. Draft content remains visibly labeled. It works in airplane mode.
+
+Automatic recording is the target for adequately evaluated recognition. Until that
+quality milestone, the current flow opens the suggested entry automatically but retains
+explicit Save/Discard. A future automatic encounter log should distinguish suggestions
+from verified collection entries, deduplicate repeat camera detections, offer undo, and
+stop when the camera closes. It must not repeatedly photograph or infer in the background.
+
+`field_guide.py` introduces optional provider contracts without adding an AI dependency:
+
+- `NarrationProvider`: speak a supplied catalog script and stop. Device TTS is sufficient;
+  an LLM is unnecessary for reading a description. Add a Listen/Stop control, stop on
+  pause/navigation, and respect audio settings before enabling narration. No microphone
+  is needed to read aloud. Speech input would be a separate opt-in capability.
+- `DiscussionProvider`: accept a question, organism ID, revision and reviewed excerpts;
+  return evidence IDs. `render_evidence` rejects unknown IDs and renders exact catalog
+  wording with sources. Empty evidence yields an explicit no-answer response. This is
+  deliberately extractive: valid citations alone would not prove generated prose true.
+
+The initial retrieval scope is one organism revision and a few short factual fields;
+no vector database or embedding model is needed. Expand to locally indexed, reviewed
+passages only when the corpus warrants it. Current draft entries cannot prepare an AI
+request. Publication review must remain authoritative; these types do not authenticate
+an arbitrary caller's claim that a record is reviewed.
+
+A future adapter may use a small device model or an explicitly connected chatbot
+service. Neither adapter is implemented or selected. Benchmark RAM, APK/model size,
+latency, heat and battery on target phones before choosing a native model; download it
+only on request. A cloud adapter needs explicit consent and a supported authenticated
+integration; an installed chatbot app does not imply access to its session or API.
+Send only the question and minimum source passages, never the encounter photo, location
+or entire journal by default. Treat questions and source documents as untrusted text;
+providers get no tools or authority to edit facts or collection membership.
+
+Evidence selection can still be irrelevant or incomplete even when every displayed word
+is sourced. Evaluate question relevance, abstention, taxonomic scope and adversarial
+requests before exposing free-text discussion. More conversational generated wording
+requires additional grounding evaluation and may never meet a strict “only the script”
+contract. Keep extractive reading available as the reliable fallback.
+
+AI integration remains last priority, after curated content, safe offline updates,
+print export and recognition/device validation. No network calls, provider SDKs, model
+loads, voice recording or automatic speech were added by this foundation.

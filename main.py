@@ -31,6 +31,7 @@ from photos import PhotoStore
 from scan_jobs import ScanWorker
 from android_photos import AndroidPhotoPicker
 from build_identity import build_identity
+from field_guide import TOPICS, introduction, read_topic
 
 
 def build_wrapped_label(text, font_size='18sp', height=140):
@@ -269,9 +270,34 @@ class CardDetailView(BoxLayout):
         self.add_widget(self.photo)
         self.add_widget(self.details_label)
         self.add_widget(self.stats_label)
+        self.add_widget(OutlineButton(text='Explore this organism', size_hint_y=None,
+                                      height=48, on_release=self.open_guide))
         for label in (self.title_label, self.meta_label, self.details_label, self.stats_label):
             label.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
             label.bind(texture_size=lambda instance, size: setattr(instance, 'height', size[1] + 16))
+
+    def open_guide(self, *_):
+        if self.card is None:
+            return
+        entry = self.card.organism
+        content = BoxLayout(orientation='vertical', padding=12, spacing=10)
+        body = BoxLayout(orientation='vertical', spacing=12)
+        reading = build_wrapped_label(introduction(entry), height=140)
+        body.add_widget(reading)
+        for topic, question in TOPICS.items():
+            button = OutlineButton(text=question, size_hint_y=None, height=52)
+            button.bind(on_release=lambda _, key=topic: setattr(reading, 'text', read_topic(entry, key)))
+            body.add_widget(button)
+        body.add_widget(build_wrapped_label(
+            'Read from the local field guide. Voice and open-ended discussion are not available yet.',
+            font_size='14sp', height=70,
+        ))
+        content.add_widget(scrollable_layout(body))
+        popup = Popup(title=f'Field Guide: {entry.name}', content=content, size_hint=(0.94, 0.94))
+        content.add_widget(OutlineButton(text='Close', size_hint_y=None, height=48,
+                                        on_release=lambda *_: popup.dismiss()))
+        track_popup(popup)
+        popup.open()
 
     def update_graphics(self, *args):
         self._bg.pos = self.pos
@@ -295,8 +321,8 @@ class CardDetailView(BoxLayout):
         self.photo.source = str(photo) if photo is not None else ''
         self.photo.height = 220 if photo is not None else 0
         self.details_label.text = (
-            f'{card.organism.description}'
-            f'\n\n{card.organism.safety_message} {DEFAULT_SAFETY_MESSAGE}'
+            introduction(card.organism)
+            + f'\n\n{card.organism.safety_message} {DEFAULT_SAFETY_MESSAGE}'
         )
         self.stats_label.text = (
             f'Habitat: {card.selected_details["Habitat"]}\n'
