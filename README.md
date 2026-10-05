@@ -35,3 +35,9 @@ ComfyUI artwork integration remains planned. The separate `download_models.py --
 ## License
 
 The concept and descriptive content in this README are intended to support this project and are covered by the repository license. They are not intended for reuse, redistribution, or commercial exploitation without permission.
+
+## Offline catalog direction
+
+See [the architecture and delivery plan](docs/OFFLINE_CATALOG.md) for curated facts,
+battery-friendly catalog updates, private cartoon artwork and planned print export.
+Current nature entries are drafts; hosted synchronization and PDF export are not yet implemented.

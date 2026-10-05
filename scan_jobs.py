@@ -39,7 +39,10 @@ class ScanWorker:
                 else:
                     path = Path(source)
                 encounter = self.photo_store.import_photo(path)
-                return encounter, self.service.identify(encounter), None
+                result = self.service.identify(encounter)
+                if result.has_confident_match:
+                    encounter = self.photo_store.create_art(encounter)
+                return encounter, result, None
             except Exception as error:
                 return encounter, None, error
             finally:

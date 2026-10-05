@@ -126,6 +126,26 @@
           },
           "is_demo": {
             "type": "boolean"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "review_status": {
+            "enum": [
+              "draft",
+              "reviewed"
+            ]
+          },
+          "fact_sources": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
           }
         }
       }

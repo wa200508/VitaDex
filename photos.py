@@ -1,12 +1,12 @@
 """Private, bounded encounter photos without location metadata."""
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageFilter, ImageOps, UnidentifiedImageError
 
 MAX_PHOTO_PIXELS = 24_000_000
 MAX_PHOTO_BYTES = 32 * 1024 * 1024
@@ -21,6 +21,7 @@ class PhotoEncounter:
     photo_path: Path
     id: str
     observed_at: str
+    art_path: Path | None = None
 
 
 class PhotoStore:
@@ -51,7 +52,26 @@ class PhotoStore:
             raise PhotoError(f'Could not use this photo: {error}') from error
         return PhotoEncounter(target, ident, datetime.now(timezone.utc).isoformat())
 
+    def create_art(self, encounter: PhotoEncounter) -> PhotoEncounter:
+        """Make a bounded local illustration after identification, preserving the photo."""
+        if encounter.photo_path.parent != self.directory:
+            raise PhotoError('Artwork requires a private encounter photo.')
+        target = encounter.photo_path.with_name(encounter.photo_path.stem + '-art.jpg')
+        try:
+            with Image.open(encounter.photo_path) as original:
+                image = original.convert('RGB')
+                image.thumbnail((768, 768))
+                # A small median filter and reduced palette need no model or network.
+                image = ImageOps.posterize(image.filter(ImageFilter.MedianFilter(3)), 4)
+                image.save(target, format='JPEG', quality=90)
+        except OSError as error:
+            target.unlink(missing_ok=True)
+            raise PhotoError(f'Could not create artwork: {error}') from error
+        return replace(encounter, art_path=target)
+
     def discard(self, encounter: PhotoEncounter) -> None:
         # Only remove owned photos, never the original picked file.
         if encounter.photo_path.parent == self.directory:
             encounter.photo_path.unlink(missing_ok=True)
+        if encounter.art_path is not None and encounter.art_path.parent == self.directory:
+            encounter.art_path.unlink(missing_ok=True)

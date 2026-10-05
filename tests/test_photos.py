@@ -70,3 +70,21 @@ def test_discard_never_deletes_an_unowned_source(tmp_path):
     store = PhotoStore(tmp_path / 'photos')
     store.discard(PhotoEncounter(Path(original), 'id', ''))
     assert original.exists()
+
+
+def test_local_art_preserves_original_and_is_bounded_and_discarded(tmp_path):
+    original = tmp_path / 'original.jpg'
+    Image.linear_gradient('L').resize((1400, 1000)).convert('RGB').save(original)
+    store = PhotoStore(tmp_path / 'photos')
+    encounter = store.import_photo(original)
+    before = encounter.photo_path.read_bytes()
+    illustrated = store.create_art(encounter)
+    assert illustrated.photo_path.read_bytes() == before
+    assert illustrated.id == encounter.id
+    with Image.open(illustrated.art_path) as art:
+        assert max(art.size) == 768
+        assert not art.getexif()
+    store.discard(illustrated)
+    assert not illustrated.art_path.exists()
+    assert not illustrated.photo_path.exists()
+    assert original.exists()

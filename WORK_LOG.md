@@ -100,3 +100,19 @@ If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for t
   native inference and physical-device camera/import/lifecycle behavior. The
   earlier FreeType blocker is resolved; the other model/content/accessibility
   gaps remain. Ubuntu commands are in `UBUNTU_EMULATOR.md`.
+
+## Offline catalog foundation and personal artwork (2026-10-04)
+
+- Added `docs/OFFLINE_CATALOG.md`: editorial PostgreSQL, immutable CDN catalog
+  publications, constrained Android background updates, source-level scientific review,
+  private encounter snapshots, broad taxonomy support, and offline PDF export design.
+- Added draft/review metadata and a publication validator requiring per-field citations
+  and independent approval of the exact revision. Existing entries remain drafts.
+- Generate bounded local median-filtered/posterized artwork after recognition on the
+  existing worker; choose original/artwork in review and persist the choice separately
+  from the original photo and catalog facts. Cancelled encounters discard both files.
+- Replaced animal-centric general UI wording with living things/organisms.
+- Hosting, update scheduling, scientifically reviewed content and printable PDF output
+  remain subsequent milestones, explicitly documented rather than advertised as live.
+- Validation: 60 tests passed, including real local-model inference; Ruff, Python
+  compilation and diff whitespace checks passed. No emulator/device run performed.

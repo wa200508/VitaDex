@@ -46,6 +46,9 @@ class OrganismEntry:
     model_labels: List[str] = field(default_factory=list)
     references: List[str] = field(default_factory=list)
     is_demo: bool = True
+    revision: int = 1
+    review_status: str = 'draft'
+    fact_sources: Dict[str, List[str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,6 +61,7 @@ class Card:
     encounter_id: str = ''
     observed_at: str = ''
     photo_asset: str = ''
+    local_art_asset: str = ''
     identification_source: str = 'legacy'
     confidence: Optional[float] = None
 

@@ -1,6 +1,7 @@
 from queue import Queue
 from threading import Event
 
+import pytest
 from PIL import Image
 
 from identification import IdentificationResult
@@ -79,3 +80,25 @@ def test_shutdown_discards_running_scan_without_scheduling_ui_work(tmp_path):
     assert scheduled.empty()
     assert not list(worker.photo_store.directory.glob('*.jpg'))
     assert not worker.start(photo, lambda *_: None, lambda _: None, lambda: None)
+
+
+def test_art_is_created_after_recognition_and_cancelled_with_photo(tmp_path):
+    from database import NATURE_DB
+    from identification import IdentificationCandidate
+
+    class MatchService:
+        def identify(self, encounter):
+            assert encounter.art_path is None
+            return IdentificationResult(
+                (IdentificationCandidate(next(iter(NATURE_DB.organisms.values())), .9),),
+                'local-test',
+            )
+
+    worker, photo, scheduled = setup_worker(tmp_path, MatchService())
+    worker.start(photo, lambda *_: None, lambda error: pytest.fail(str(error)), lambda: None)
+    callback = scheduled.get(timeout=5)
+    assert list(worker.photo_store.directory.glob('*-art.jpg'))
+    worker.cancel()
+    callback()
+    assert not list(worker.photo_store.directory.glob('*.jpg'))
+    worker.close()

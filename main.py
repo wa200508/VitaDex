@@ -137,11 +137,13 @@ class OutlineButton(Button):
 
 
 def card_photo_path(card):
-    if not card.photo_asset:
-        return None
     root = Path(App.get_running_app().user_data_dir).resolve()
-    photo = (root / card.photo_asset).resolve()
-    return photo if photo.is_relative_to(root) and photo.is_file() else None
+    for asset in (card.local_art_asset, card.photo_asset):
+        if asset:
+            photo = (root / asset).resolve()
+            if photo.is_relative_to(root) and photo.is_file():
+                return photo
+    return None
 
 
 def card_background_color(card):
@@ -287,7 +289,8 @@ class CardDetailView(BoxLayout):
         self.title_label.text = card.title
         self._background_color.rgba = card_background_color(card)
         provenance = 'Fictional demo' if card.organism.is_demo else 'Suggested category; not verified'
-        self.meta_label.text = f'{card.organism.type} • {provenance}'
+        review = '' if card.organism.is_demo else f' • Facts: {card.organism.review_status}'
+        self.meta_label.text = f'{card.organism.type} • {provenance}{review}'
         photo = card_photo_path(card)
         self.photo.source = str(photo) if photo is not None else ''
         self.photo.height = 220 if photo is not None else 0
@@ -374,7 +377,7 @@ class HomeScreen(Screen):
             text_size=(Window.width - 40, None),
         ))
         feature_box.add_widget(Label(
-            text='• Observe wildlife from a safe distance; ask an adult for help',
+            text='• Observe living things from a safe distance; ask an adult for help',
             color=(1, 1, 1, 1),
             font_size='16sp',
             halign='left',
@@ -576,6 +579,8 @@ class ScanScreen(Screen):
         card.encounter_id = encounter.id
         card.observed_at = encounter.observed_at
         card.photo_asset = str(encounter.photo_path.relative_to(Path(app.user_data_dir)))
+        if encounter.art_path is not None:
+            card.local_art_asset = str(encounter.art_path.relative_to(Path(app.user_data_dir)))
         card.identification_source = result.source
         card.confidence = candidate.confidence
         content = BoxLayout(orientation='vertical', padding=12, spacing=12)
@@ -590,7 +595,7 @@ class ScanScreen(Screen):
         detail.bind(minimum_height=detail.setter('height'))
         body.add_widget(detail)
         content.add_widget(scrollable_layout(body))
-        buttons = BoxLayout(orientation='vertical', size_hint_y=None, height=120, spacing=8)
+        buttons = BoxLayout(orientation='vertical', size_hint_y=None, height=174, spacing=8)
         content.add_widget(buttons)
         popup = Popup(title='Review Suggested Match', content=content, size_hint=(0.94, 0.94))
         saved = False
@@ -617,6 +622,16 @@ class ScanScreen(Screen):
             if not saved:
                 app.photo_store.discard(encounter)
 
+        def toggle_art(button):
+            if card.local_art_asset:
+                card.local_art_asset = ''
+                button.text = 'Use cartoon artwork'
+            elif encounter.art_path is not None:
+                card.local_art_asset = str(encounter.art_path.relative_to(Path(app.user_data_dir)))
+                button.text = 'Use original photo'
+            detail.set_card(card)
+
+        buttons.add_widget(OutlineButton(text='Use original photo', on_release=toggle_art))
         buttons.add_widget(OutlineButton(text='Save Suggested Card', on_release=save))
         buttons.add_widget(OutlineButton(text='Discard', on_release=lambda *_: popup.dismiss()))
         popup.bind(on_dismiss=dismissed)
@@ -652,7 +667,7 @@ class DemoScreen(Screen):
         ))
 
         layout.add_widget(build_wrapped_label(
-            'Create a randomly chosen sample card. These creatures are fictional and do not identify anything around you. '
+            'Create a randomly chosen sample card. These organisms are fictional and do not identify anything around you. '
             + DEFAULT_SAFETY_MESSAGE,
             font_size='17sp',
             height=160,
@@ -706,7 +721,7 @@ class DemoScreen(Screen):
         content = BoxLayout(orientation='vertical', padding=12, spacing=12)
         body = BoxLayout(orientation='vertical', spacing=12)
         body.add_widget(build_wrapped_label(
-            'This fictional sample was chosen at random. It is not a wildlife identification.',
+            'This fictional sample was chosen at random. It is not an organism identification.',
             height=60,
         ))
         detail = CardDetailView()

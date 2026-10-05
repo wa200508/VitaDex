@@ -160,3 +160,25 @@ def test_encounter_metadata_survives_journal_round_trip(tmp_path):
     repository = JournalRepository(tmp_path / 'journal.sqlite3')
     repository.save_cards([card])
     assert repository.load_cards() == [card]
+
+
+def test_personal_art_and_fact_provenance_survive_restart(tmp_path):
+    from copy import deepcopy
+    card = deepcopy(build_card())
+    card.photo_asset = 'photos/original.jpg'
+    card.local_art_asset = 'photos/original-art.jpg'
+    card.organism.revision = 2
+    card.organism.fact_sources = {'description': ['https://example.org/research']}
+    repository = JournalRepository(tmp_path / 'journal.sqlite3')
+    repository.save_cards([card])
+    assert repository.load_cards() == [card]
+
+
+def test_older_snapshot_defaults_to_draft_and_original_photo():
+    data = JournalRepository._card_to_dict(build_card())
+    data.pop('local_art_asset')
+    for field in ('revision', 'review_status', 'fact_sources'):
+        data['organism'].pop(field)
+    card = JournalRepository._card_from_dict(data)
+    assert card.local_art_asset == ''
+    assert card.organism.review_status == 'draft'

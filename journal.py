@@ -112,6 +112,7 @@ class JournalRepository:
             'encounter_id': card.encounter_id,
             'observed_at': card.observed_at,
             'photo_asset': card.photo_asset,
+            'local_art_asset': card.local_art_asset,
             'identification_source': card.identification_source,
             'confidence': card.confidence,
         }
@@ -129,6 +130,7 @@ class JournalRepository:
             encounter_id=data.get('encounter_id', ''),
             observed_at=data.get('observed_at', ''),
             photo_asset=data.get('photo_asset', ''),
+            local_art_asset=data.get('local_art_asset', ''),
             identification_source=data.get('identification_source', 'legacy'),
             confidence=data.get('confidence'),
         )
