@@ -155,3 +155,12 @@ If the cached test environment exists, use `/tmp/vitadex-check/bin/python` for t
   from the APK. Added Android Save-dialog callback/cancellation tests.
 - Current local validation: 87 tests pass. Letter and A4/long-text PDF proofs were
   rendered and visually inspected. Hosting remains a pending user choice.
+
+## Android dependency installation repair (2026-10-05)
+
+The ca79678 APK verification correctly rejected a missing charset-normalizer module.
+Its upstream setup.py relies on newer pyproject metadata that the pinned p4a host
+setuptools does not read. The local recipe now supplies explicit package discovery and
+version metadata while keeping the implementation pure Python. A local setup.py install
+and isolated import/encoding-detection smoke check verify the corrected installation.
+All 87 application tests and Ruff still pass; the rebuilt APK gate remains mandatory.
