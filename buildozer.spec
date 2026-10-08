@@ -11,7 +11,7 @@ requirements = python3,kivy==2.3.1,filetype,pillow,pyjnius,reportlab==4.4.9,char
 orientation = portrait
 fullscreen = 0
 # Photo capture requests CAMERA on demand; importing uses the system document picker.
-# No microphone, location, network, or broad storage permissions.
+# INTERNET supports explicit catalog checks; no microphone/location/broad storage access.
 android.permissions = CAMERA, INTERNET
 android.add_src = android_src
 android.extra_manifest_xml = android_src/tts_queries.xml

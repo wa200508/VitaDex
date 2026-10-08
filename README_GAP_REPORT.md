@@ -41,7 +41,7 @@ The README remains the product specification. Android is the first target platfo
 
 ## Validation
 
-The latest local check passed 108 tests, Ruff, and Python compilation on Python 3.12. Tests cover catalog/schema invariants, conservative model output handling, real downloaded-model inference, label alignment, model-download integrity, private photo handling, scan cancellation/failure/shutdown, journal protections, version-1 migration, transactional catalog updates, PDF output/overflow/failure behavior, and document-picker callback handling.
+The latest local check passed 109 tests, Ruff, and Python compilation on Python 3.12. Tests cover catalog/schema invariants, conservative model output handling, real downloaded-model inference, label alignment, model-download integrity, private photo handling, scan cancellation/failure/shutdown, journal protections, version-1 migration, transactional catalog updates, PDF output/overflow/failure behavior, and document-picker callback handling.
 
 A Kivy flow rendered at phone-sized windows and exercised a real photo, suggested-match review, simulated disk-full recovery, persistence, separate fictional samples, and Back navigation. Native Java helpers compiled against Android API 35/TensorFlow Lite 2.16.1, and a PyJNIus byte/float round trip passed. A small real-flower corpus check demonstrates category breadth, not species accuracy. Details and restart instructions are in `WORK_LOG.md`.
 

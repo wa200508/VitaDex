@@ -198,7 +198,7 @@ background download worker. No startup/scan/periodic networking. Cached updates 
 on next launch and leave saved fact snapshots unchanged. Bundled pinned certifi roots
 for Android HTTPS and made their presence an APK gate. INTERNET is now declared.
 
-108 local tests, Ruff, compileall and diff checks passed. The actual public HTTPS
+109 local tests, Ruff, compileall and diff checks passed. The actual public HTTPS
 endpoint returned awaiting_review through the app downloader; update correctly refused
 to install it and created no cache. Scientific draft remains pending independent review.
 Android packaging and native networking require the new build/device validation.

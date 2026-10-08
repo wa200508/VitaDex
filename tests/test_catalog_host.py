@@ -70,3 +70,14 @@ def test_removing_inputs_does_not_withdraw_publication(tmp_path):
     for path in source.iterdir():
         path.unlink()
     assert prepare(source, host).read_bytes() == before
+
+
+def test_empty_catalog_cannot_be_published_as_reviewed(tmp_path):
+    source, host = tmp_path / 'source', tmp_path / 'host'
+    inputs(source)
+    catalog = json.loads((source / 'catalog.json').read_text())
+    catalog['organisms'] = []
+    (source / 'catalog.json').write_text(json.dumps(catalog))
+    with pytest.raises(CatalogUpdateError, match='at least one organism'):
+        prepare(source, host)
+    assert not host.exists()
