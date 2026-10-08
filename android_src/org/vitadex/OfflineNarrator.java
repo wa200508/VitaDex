@@ -47,10 +47,14 @@ public final class OfflineNarrator implements TextToSpeech.OnInitListener {
         engine.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override public void onStart(String id) { }
             @Override public void onDone(String id) {
-                if (id.equals(utterance)) state = "ready";
+                synchronized (OfflineNarrator.this) {
+                    if (id.equals(utterance)) state = "ready";
+                }
             }
             @Override public void onError(String id) {
-                if (id.equals(utterance)) state = "error:Device speech could not read this text.";
+                synchronized (OfflineNarrator.this) {
+                    if (id.equals(utterance)) state = "error:Device speech could not read this text.";
+                }
             }
         });
         ready = true;

@@ -183,3 +183,7 @@ All 87 application tests and Ruff still pass; the rebuilt APK gate remains manda
   The card, artwork menu, delete confirmation and guide were rendered and inspected.
 - The previous 0bfbb11 x86_64/arm64 APKs and Python CI both passed. The new Java narrator
   still needs the next APK build plus real-device audio/lifecycle checks.
+- Additional native-logic QA compiled the real OfflineNarrator.java against a simulated
+  Android speech API and exercised installed/offline voice selection, stop-before-init,
+  stale utterance callbacks, missing voices and shutdown. Callback state changes now
+  synchronize with speak/stop so a stale completion cannot overwrite a newer utterance.
