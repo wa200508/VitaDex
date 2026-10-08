@@ -8,6 +8,8 @@ on:
       - scripts/prepare_catalog_host.py
       - scripts/publish_catalog.py
       - catalog_review.py
+      - catalog_updates.py
+      - database.py
       - .github/workflows/catalog-publish.yml
   workflow_dispatch:
 

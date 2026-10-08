@@ -13,8 +13,6 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, build_opener
 
-import certifi
-
 from catalog_review import validate_publication
 from database import CardDatabase
 
@@ -112,6 +110,8 @@ def https_url(url):
 
 
 def download(url, limit):
+    import certifi
+
     https_url(url)
     context = ssl.create_default_context(cafile=certifi.where())
     opener = build_opener(NoRedirects(), HTTPSHandler(context=context))
