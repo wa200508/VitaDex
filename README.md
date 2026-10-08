@@ -43,3 +43,5 @@ battery-friendly catalog updates, private cartoon artwork and print export.
 Current nature entries are drafts. Safe catalog caching and single-card PDF export are implemented; hosted Android synchronization remains pending.
 
 See [catalog operations](docs/CATALOG_OPERATIONS.md) and [printing](docs/PRINTING.md).
+
+Saved cards now support artwork changes and deliberate deletion. On Android, the local field guide offers Listen/Stop using an installed offline English voice. See [collection and audio](docs/COLLECTION_AND_AUDIO.md).

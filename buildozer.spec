@@ -14,6 +14,7 @@ fullscreen = 0
 # No microphone, location, network, or broad storage permissions.
 android.permissions = CAMERA
 android.add_src = android_src
+android.extra_manifest_xml = android_src/tts_queries.xml
 android.gradle_dependencies = org.tensorflow:tensorflow-lite:2.16.1
 p4a.commit = v2024.01.21
 p4a.local_recipes = p4a-recipes

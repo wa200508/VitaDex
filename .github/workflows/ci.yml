@@ -37,7 +37,7 @@ jobs:
         run: python -m ruff check .
 
       - name: Compile Python sources
-        run: python -m compileall -q main.py build_identity.py catalog_review.py catalog_updates.py print_export.py export_jobs.py android_documents.py field_guide.py database.py identification.py journal.py local_model.py photos.py scan_jobs.py android_photos.py download_identification_model.py download_models.py scripts tests
+        run: python -m compileall -q main.py build_identity.py catalog_review.py catalog_updates.py collection_assets.py narration.py print_export.py export_jobs.py android_documents.py field_guide.py database.py identification.py journal.py local_model.py photos.py scan_jobs.py android_photos.py download_identification_model.py download_models.py scripts tests
 
       - name: Run tests
         run: python -m pytest

@@ -164,3 +164,22 @@ setuptools does not read. The local recipe now supplies explicit package discove
 version metadata while keeping the implementation pure Python. A local setup.py install
 and isolated import/encoding-detection smoke check verify the corrected installation.
 All 87 application tests and Ruff still pass; the rebuilt APK gate remains mandatory.
+
+## Saved-card management and offline narration (2026-10-07)
+
+- Added durable artwork-only updates and confirmed deletion. Original observations and
+  fact snapshots are preserved during art changes; unused images are removed only after
+  a successful journal save. Shared assets and files outside owned storage are protected.
+- Added a local artwork replacement worker with import limits and cancellation, without
+  running recognition again. Startup collects aged, unreferenced UUID files, skipping
+  recent/unknown files, redirected directories, symlinks and unreadable journals.
+- Added user-initiated Android Listen/Stop using installed, non-network English voices.
+  Speech is lazy, stops on topic changes/dismissal/pause, and releases native resources
+  on shutdown. Missing voices and bounded initialization/read timeouts are handled.
+  No microphone/Internet permission, chatbot SDK or LLM was added.
+- Validation: 100 tests passed, Ruff/compilation/diff checks passed. An offscreen Kivy
+  interaction smoke test exercised persistent art changes, regeneration, disk-full
+  recovery, deletion/cancellation and guide speech controls with a simulated backend.
+  The card, artwork menu, delete confirmation and guide were rendered and inspected.
+- The previous 0bfbb11 x86_64/arm64 APKs and Python CI both passed. The new Java narrator
+  still needs the next APK build plus real-device audio/lifecycle checks.

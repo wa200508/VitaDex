@@ -182,3 +182,48 @@ def test_older_snapshot_defaults_to_draft_and_original_photo():
     card = JournalRepository._card_from_dict(data)
     assert card.local_art_asset == ''
     assert card.organism.review_status == 'draft'
+
+
+def test_art_edit_preserves_facts_photo_and_encounter(tmp_path):
+    from copy import deepcopy
+    repository = JournalRepository(tmp_path / 'journal.sqlite3')
+    session = JournalSession(repository)
+    card = deepcopy(build_card())
+    card.photo_asset = 'photos/original.jpg'
+    card.encounter_id = 'observation-id'
+    session.add_card(card)
+    updated = session.set_artwork(card, 'photos/new-art.jpg')
+    assert updated.organism == card.organism
+    assert updated.photo_asset == card.photo_asset
+    assert updated.encounter_id == card.encounter_id
+    assert card.local_art_asset == ''
+    assert repository.load_cards() == [updated]
+    with pytest.raises(JournalError, match='no longer'):
+        session.set_artwork(card, '')
+
+
+def test_failed_edit_or_delete_keeps_displayed_and_stored_card(tmp_path, monkeypatch):
+    repository = JournalRepository(tmp_path / 'journal.sqlite3')
+    session = JournalSession(repository)
+    card = build_card()
+    session.add_card(card)
+    def fail(_):
+        raise JournalError('disk full')
+    monkeypatch.setattr(repository, 'save_cards', fail)
+    with pytest.raises(JournalError, match='disk full'):
+        session.set_artwork(card, 'photos/new-art.jpg')
+    with pytest.raises(JournalError, match='disk full'):
+        session.remove_card(card)
+    assert session.cards == [card]
+    assert repository.load_cards() == [card]
+
+
+def test_delete_is_durable_and_distinguishes_equal_cards(tmp_path):
+    repository = JournalRepository(tmp_path / 'journal.sqlite3')
+    session = JournalSession(repository)
+    one, two = build_card(), build_card()
+    session.add_card(one)
+    session.add_card(two)
+    session.remove_card(two)
+    assert session.cards[0] is one
+    assert repository.load_cards() == [one]

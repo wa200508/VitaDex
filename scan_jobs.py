@@ -39,9 +39,7 @@ class ScanWorker:
                 else:
                     path = Path(source)
                 encounter = self.photo_store.import_photo(path)
-                result = self.service.identify(encounter)
-                if result.has_confident_match:
-                    encounter = self.photo_store.create_art(encounter)
+                encounter, result = self.process_encounter(encounter)
                 return encounter, result, None
             except Exception as error:
                 return encounter, None, error
@@ -76,6 +74,12 @@ class ScanWorker:
         self.future.add_done_callback(completed)
         return True
 
+    def process_encounter(self, encounter):
+        result = self.service.identify(encounter)
+        if result.has_confident_match:
+            encounter = self.photo_store.create_art(encounter)
+        return encounter, result
+
     def cancel(self):
         self.generation += 1
 
@@ -84,3 +88,13 @@ class ScanWorker:
         self.cancel()
         # Already-running bounded inference may finish; its result is discarded.
         self.executor.shutdown(wait=False)
+
+
+class ArtworkWorker(ScanWorker):
+    """Reuse bounded import/cancellation, without running identification again."""
+
+    def __init__(self, photo_store, schedule):
+        super().__init__(photo_store, None, schedule)
+
+    def process_encounter(self, encounter):
+        return self.photo_store.create_art(encounter), None

@@ -109,4 +109,4 @@ def read_topic(entry: OrganismEntry, topic: str) -> str:
     evidence = next((item for item in reviewed_excerpts(entry) if item.topic == topic), None)
     if evidence:
         return f'{text}\n\nSources: ' + ', '.join(evidence.sources)
-    return f'Draft material; not available for grounded discussion yet.\n\n{text}'
+    return f'Draft field-guide text. Scientific review is pending.\n\n{text}'

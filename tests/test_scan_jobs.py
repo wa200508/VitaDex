@@ -102,3 +102,17 @@ def test_art_is_created_after_recognition_and_cancelled_with_photo(tmp_path):
     callback()
     assert not list(worker.photo_store.directory.glob('*.jpg'))
     worker.close()
+
+
+def test_artwork_replacement_never_calls_an_identification_service(tmp_path):
+    from scan_jobs import ArtworkWorker
+    worker, photo, scheduled = setup_worker(tmp_path)
+    worker.close()
+    artwork = ArtworkWorker(worker.photo_store, scheduled.put)
+    received = []
+    assert artwork.start(photo, lambda encounter, _: received.append(encounter), received.append, lambda: None)
+    scheduled.get(timeout=5)()
+    assert received[0].art_path.is_file()
+    assert received[0].photo_path.is_file()
+    assert artwork.service is None
+    artwork.close()

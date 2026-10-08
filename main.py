@@ -29,10 +29,12 @@ from identification import DEFAULT_SAFETY_MESSAGE, DemoIdentificationService, Id
 from journal import JournalError, JournalRepository, JournalSession
 from local_model import LocalIdentificationService
 from photos import PhotoStore
-from scan_jobs import ScanWorker
+from scan_jobs import ScanWorker, ArtworkWorker
+from collection_assets import remove_unused_assets, remove_orphaned_photos
 from android_photos import AndroidPhotoPicker
 from android_documents import AndroidDocumentPicker, write_document
 from export_jobs import ExportWorker
+from narration import AndroidSpeechBridge, NarrationSession
 from build_identity import build_identity
 from field_guide import TOPICS, introduction, read_topic
 
@@ -285,18 +287,49 @@ class CardDetailView(BoxLayout):
         entry = self.card.organism
         content = BoxLayout(orientation='vertical', padding=12, spacing=10)
         body = BoxLayout(orientation='vertical', spacing=12)
+        app = App.get_running_app()
         reading = build_wrapped_label(introduction(entry), height=140)
         body.add_widget(reading)
+        listen = OutlineButton(text='Listen', size_hint_y=None, height=52)
+
+        def reset():
+            listen.text = 'Listen'
+
+        def stop():
+            if app.narration is not None:
+                app.narration.stop()
+            reset()
+
+        def select_topic(topic):
+            stop()
+            reading.text = read_topic(entry, topic)
+
+        def speak(*_):
+            if app.narration is None:
+                show_message('Narration unavailable', 'Offline voice narration is available on Android.')
+                return
+            if app.narration.active:
+                stop()
+                return
+            listen.text = 'Stop listening'
+            def failed(message):
+                reset()
+                show_message('Narration unavailable', message)
+            app.narration.speak(reading.text, reset, failed)
+
+        listen.bind(on_release=speak)
+        body.add_widget(listen)
         for topic, question in TOPICS.items():
             button = OutlineButton(text=question, size_hint_y=None, height=52)
-            button.bind(on_release=lambda _, key=topic: setattr(reading, 'text', read_topic(entry, key)))
+            button.bind(on_release=lambda _, key=topic: select_topic(key))
             body.add_widget(button)
         body.add_widget(build_wrapped_label(
-            'Read from the local field guide. Voice and open-ended discussion are not available yet.',
+            'Read from the local field guide. Listening uses an installed offline English voice on Android.',
             font_size='14sp', height=70,
         ))
         content.add_widget(scrollable_layout(body))
         popup = Popup(title=f'Field Guide: {entry.name}', content=content, size_hint=(0.94, 0.94))
+        popup.bind(on_dismiss=lambda *_: stop())
         content.add_widget(OutlineButton(text='Close', size_hint_y=None, height=48,
                                         on_release=lambda *_: popup.dismiss()))
         track_popup(popup)
@@ -853,13 +886,26 @@ class CardBookScreen(Screen):
         self.refresh_cards()
 
     def open_fullscreen_card(self, card):
+        current = [card]
         content = BoxLayout(orientation='vertical', padding=20, spacing=14)
         detail = CardDetailView(size_hint=(1, 1))
         detail.set_card(card)
         content.add_widget(scrollable_layout(detail))
+        def updated(new_card):
+            current[0] = new_card
+            detail.set_card(new_card)
+
+        content.add_widget(OutlineButton(
+            text='Change artwork', size_hint_y=None, height=48,
+            on_release=lambda *_: App.get_running_app().choose_artwork(current[0], updated),
+        ))
+        content.add_widget(OutlineButton(
+            text='Delete card', size_hint_y=None, height=48,
+            on_release=lambda *_: App.get_running_app().confirm_delete(current[0], popup),
+        ))
         content.add_widget(OutlineButton(
             text='Export for printing', size_hint_y=None, height=56,
-            on_release=lambda *_: App.get_running_app().choose_export(card),
+            on_release=lambda *_: App.get_running_app().choose_export(current[0]),
         ))
         content.add_widget(OutlineButton(
             text='Close', size_hint_y=None, height=56, on_release=lambda *_: popup.dismiss(),
@@ -933,10 +979,13 @@ class VitaDexApp(App):
         self.photo_store = PhotoStore(Path(self.user_data_dir) / 'photos')
         schedule = lambda callback: Clock.schedule_once(lambda _: callback(), 0)
         self.scan_worker = ScanWorker(self.photo_store, self.identification_service, schedule)
+        self.artwork_worker = ArtworkWorker(self.photo_store, schedule)
         self.photo_picker = AndroidPhotoPicker(schedule)
         self.document_picker = AndroidDocumentPicker(schedule)
         self.export_worker = ExportWorker(Path(self.user_data_dir), schedule)
         self.export_pending = False
+        self.narration = (NarrationSession(AndroidSpeechBridge(), Clock.schedule_interval)
+                          if platform == 'android' else None)
         self.journal_session = JournalSession(self.journal_repository)
         self.cards = self.journal_session.cards
         self.new_cards = []
@@ -956,6 +1005,126 @@ class VitaDexApp(App):
         manager.add_widget(self.card_book_screen)
         return manager
 
+    def refresh_collection(self, old_card, new_card=None):
+        self.new_cards[:] = [new_card if item is old_card else item for item in self.new_cards
+                             if item is not old_card or new_card is not None]
+        self.card_book_screen.cards[:] = [
+            new_card if item is old_card else item for item in self.card_book_screen.cards
+            if item is not old_card or new_card is not None
+        ]
+        self.card_book_screen.refresh_cards()
+        self.home_screen.update_new_card_badge()
+
+    def confirm_delete(self, card, detail_popup):
+        content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+        content.add_widget(build_wrapped_label(
+            f'Delete {card.title} from this device? Its unused private photos will also be removed.',
+            height=110))
+        popup = Popup(title='Delete card?', content=scrollable_layout(content), size_hint=(0.9, 0.6))
+
+        def delete(*_):
+            try:
+                self.journal_session.remove_card(card)
+            except JournalError as error:
+                show_message('Card not deleted', str(error))
+                return
+            failures = remove_unused_assets(self.user_data_dir,
+                                            (card.photo_asset, card.local_art_asset), self.cards)
+            self.refresh_collection(card)
+            popup.dismiss()
+            detail_popup.dismiss()
+            if failures:
+                show_message('Card deleted', 'Some unused image files could not be removed.')
+        content.add_widget(OutlineButton(text='Delete', size_hint_y=None, height=52, on_release=delete))
+        content.add_widget(OutlineButton(text='Cancel', size_hint_y=None, height=52,
+                                        on_release=lambda *_: popup.dismiss()))
+        track_popup(popup)
+        popup.open()
+
+    def choose_artwork(self, card, on_updated):
+        if self.artwork_worker.busy:
+            show_message('Artwork in progress', 'Wait for the current artwork to finish.')
+            return
+        content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+        content.add_widget(build_wrapped_label(
+            'Change the illustration while keeping the original identification photo and facts.',
+            height=100))
+        popup = Popup(title='Card artwork', content=scrollable_layout(content), size_hint=(0.9, 0.7))
+
+        def commit(asset):
+            old_asset = card.local_art_asset
+            new_card = self.journal_session.set_artwork(card, asset)
+            remove_unused_assets(self.user_data_dir, (old_asset,), self.cards)
+            self.refresh_collection(card, new_card)
+            on_updated(new_card)
+
+        def original(*_):
+            try:
+                commit('')
+            except JournalError as error:
+                show_message('Artwork not changed', str(error))
+                return
+            popup.dismiss()
+
+        def process(source):
+            def ready(encounter, _):
+                try:
+                    asset = str(encounter.art_path.relative_to(Path(self.user_data_dir)))
+                    commit(asset)
+                except (JournalError, ValueError) as error:
+                    self.photo_store.discard(encounter)
+                    show_message('Artwork not changed', str(error))
+                    return
+                # Only the new illustration is needed; retain the original encounter photo.
+                remove_unused_assets(self.user_data_dir,
+                                     (str(encounter.photo_path.relative_to(Path(self.user_data_dir))),),
+                                     self.cards)
+
+            if not self.artwork_worker.start(
+                    source, ready, lambda error: show_message('Artwork unavailable', str(error)),
+                    lambda: None):
+                show_message('Artwork in progress', 'Wait for the current artwork to finish.')
+
+        def pick(*_):
+            popup.dismiss()
+            if platform == 'android':
+                self.photo_picker.select(process, lambda error: show_message('Photo unavailable', error))
+                return
+            body = BoxLayout(orientation='vertical', spacing=12)
+            chooser = FileChooserIconView(filters=['*.jpg', '*.jpeg', '*.png', '*.webp'], multiselect=False)
+            body.add_widget(chooser)
+            selection = Popup(title='Choose artwork photo', content=body, size_hint=(0.94, 0.94))
+            def selected(*_):
+                if chooser.selection:
+                    source = chooser.selection[0]
+                    selection.dismiss()
+                    process(source)
+            body.add_widget(OutlineButton(text='Use photo', size_hint_y=None, height=52, on_release=selected))
+            body.add_widget(OutlineButton(text='Cancel', size_hint_y=None, height=52,
+                                         on_release=lambda *_: selection.dismiss()))
+            track_popup(selection)
+            selection.open()
+
+        def cartoon(*_):
+            root = Path(self.user_data_dir).resolve()
+            photo = (root / card.photo_asset).resolve()
+            if not card.photo_asset or not photo.is_relative_to(root / 'photos') or not photo.is_file():
+                show_message('Photo unavailable', 'The original observation photo is unavailable.')
+                return
+            popup.dismiss()
+            process(photo)
+
+        content.add_widget(OutlineButton(text='Use original photo', size_hint_y=None, height=52,
+                                        disabled=not bool(card.photo_asset), on_release=original))
+        content.add_widget(OutlineButton(text='Cartoonify original', size_hint_y=None, height=52,
+                                        disabled=not bool(card.photo_asset), on_release=cartoon))
+        content.add_widget(OutlineButton(text='Choose new artwork photo', size_hint_y=None,
+                                        height=52, on_release=pick))
+        content.add_widget(OutlineButton(text='Cancel', size_hint_y=None, height=52,
+                                        on_release=lambda *_: popup.dismiss()))
+        track_popup(popup)
+        popup.open()
+
     def choose_export(self, card):
         if self.export_pending or self.export_worker.busy:
             show_message('Export in progress', 'Finish the current export before starting another.')
@@ -964,7 +1133,7 @@ class VitaDexApp(App):
         content.add_widget(build_wrapped_label(
             'Export a 2.5 x 3.5 inch card front and back, plus full facts and references. '
             'Print at 100% and test duplex alignment before ordering copies.', height=140))
-        popup = Popup(title='Print layout', content=content, size_hint=(0.9, 0.65))
+        popup = Popup(title='Print layout', content=scrollable_layout(content), size_hint=(0.9, 0.65))
 
         def start(paper):
             popup.dismiss()
@@ -1024,6 +1193,8 @@ class VitaDexApp(App):
             failed(str(error))
 
     def on_start(self):
+        if not self.journal_session.error:
+            self.export_worker.executor.submit(remove_orphaned_photos, self.user_data_dir, list(self.cards))
         if self.journal_session.error:
             Logger.error(f'VitaDex: {self.journal_session.error}')
             show_message(
@@ -1033,7 +1204,10 @@ class VitaDexApp(App):
             )
 
     def on_pause(self):
+        if self.narration is not None:
+            self.narration.stop()
         self.scan_worker.cancel()
+        self.artwork_worker.cancel()
         self.scan_screen.release_camera()
         if self.scan_screen.review_popup is not None:
             self.scan_screen.review_popup.dismiss()
@@ -1042,7 +1216,10 @@ class VitaDexApp(App):
         return True
 
     def on_stop(self):
+        if self.narration is not None:
+            self.narration.close()
         self.scan_worker.close()
+        self.artwork_worker.close()
         self.photo_picker.cancel()
         self.document_picker.cancel()
         self.export_worker.close()

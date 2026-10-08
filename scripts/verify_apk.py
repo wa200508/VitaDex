@@ -39,7 +39,8 @@ def verify_apk(path, arch):
                         raise ValueError('charset-normalizer must use its pure Python implementation.')
         with tarfile.open(fileobj=io.BytesIO(apk.read('assets/private.tar'))) as private:
             names = set(private.getnames())
-            for required in ('print_export.pyc', 'assets/fonts/DejaVuSans.ttf',
+            for required in ('print_export.pyc', 'narration.pyc', 'collection_assets.pyc',
+                             'assets/fonts/DejaVuSans.ttf',
                              'assets/fonts/DejaVuSans-Bold.ttf', 'assets/fonts/LICENSE.txt'):
                 if required not in names:
                     raise ValueError(f'Print asset missing: {required}')

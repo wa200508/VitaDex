@@ -189,3 +189,7 @@ contract. Keep extractive reading available as the reliable fallback.
 AI integration remains last priority, after curated content, safe offline updates,
 print export and recognition/device validation. No network calls, provider SDKs, model
 loads, voice recording or automatic speech were added by this foundation.
+
+## Collection and audio implementation update
+
+Saved-card artwork replacement, deliberate deletion and aged orphan cleanup are now implemented. Android Listen/Stop uses the platform TTS engine with an installed offline English voice; no language model is involved. See COLLECTION_AND_AUDIO.md for usage and remaining device checks.

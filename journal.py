@@ -3,7 +3,7 @@
 import json
 import sqlite3
 from contextlib import closing
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -148,12 +148,40 @@ class JournalSession:
             self.cards = []
             self.error = str(error)
 
-    def add_card(self, card: Card) -> None:
+    def _ensure_writable(self) -> None:
         if self.error is not None:
             raise JournalError(
                 'The existing journal could not be read. It has been kept unchanged. '
-                'Restore the journal before adding cards.'
+                'Restore the journal before changing cards.'
             )
+
+    def add_card(self, card: Card) -> None:
+        self._ensure_writable()
         updated_cards = [*self.cards, card]
         self.repository.save_cards(updated_cards)
         self.cards.append(card)
+
+    def _index(self, card: Card) -> int:
+        for index, existing in enumerate(self.cards):
+            if existing is card:
+                return index
+        raise JournalError('This card is no longer in the collection.')
+
+    def set_artwork(self, card: Card, asset: str) -> Card:
+        """Change decoration only; persist before changing the displayed collection."""
+        self._ensure_writable()
+        index = self._index(card)
+        updated = replace(card, local_art_asset=asset)
+        cards = list(self.cards)
+        cards[index] = updated
+        self.repository.save_cards(cards)
+        self.cards[index] = updated
+        return updated
+
+    def remove_card(self, card: Card) -> None:
+        self._ensure_writable()
+        index = self._index(card)
+        cards = list(self.cards)
+        del cards[index]
+        self.repository.save_cards(cards)
+        del self.cards[index]
