@@ -7,10 +7,13 @@ manifest endpoint is supplied by deployment configuration, never by catalog text
 import hashlib
 import json
 import sqlite3
+import ssl
 import time
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
-from urllib.request import HTTPRedirectHandler, build_opener
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, build_opener
+
+import certifi
 
 from catalog_review import validate_publication
 from database import CardDatabase
@@ -18,6 +21,10 @@ from database import CardDatabase
 MAX_BUNDLE_BYTES = 8 * 1024 * 1024
 MAX_MANIFEST_BYTES = 8192
 SCHEMA_VERSION = 1
+CATALOG_MANIFEST_URL = (
+    'https://raw.githubusercontent.com/wa200508/VitaDex/'
+    'codex/catalog-publications/manifest.json'
+)
 
 
 class CatalogUpdateError(ValueError):
@@ -57,6 +64,22 @@ class CatalogCache:
             pass
         return baseline
 
+    def installed_release(self):
+        """Return the latest usable snapshot, without creating a database."""
+        if not self.path.exists():
+            return 0
+        try:
+            with sqlite3.connect(f'{self.path.as_uri()}?mode=ro', uri=True) as connection:
+                rows = connection.execute('SELECT body FROM releases ORDER BY release DESC').fetchall()
+            for (raw,) in rows:
+                try:
+                    return decode_bundle(raw)[0]['release']
+                except CatalogUpdateError:
+                    continue
+        except sqlite3.Error:
+            pass
+        return 0
+
     def install(self, raw):
         if len(raw) > MAX_BUNDLE_BYTES:
             raise CatalogUpdateError('Catalog exceeds the download limit.')
@@ -90,7 +113,8 @@ def https_url(url):
 
 def download(url, limit):
     https_url(url)
-    opener = build_opener(NoRedirects())
+    context = ssl.create_default_context(cafile=certifi.where())
+    opener = build_opener(NoRedirects(), HTTPSHandler(context=context))
     deadline = time.monotonic() + 30
     chunks = []
     size = 0
@@ -120,6 +144,10 @@ def update_catalog(manifest_url, cache, fetch=download):
         manifest = json.loads(manifest_raw)
         if manifest['schema_version'] != SCHEMA_VERSION:
             raise ValueError('Unsupported manifest schema.')
+        if manifest.get('status') == 'awaiting_review':
+            raise ValueError('No reviewed catalog has been published yet. Your offline guide is unchanged.')
+        if type(manifest['release']) is not int or manifest['release'] < 1:
+            raise ValueError('Invalid manifest release.')
         size = manifest['size']
         if type(size) is not int or not 0 < size <= MAX_BUNDLE_BYTES:
             raise ValueError('Invalid bundle size.')
@@ -127,6 +155,12 @@ def update_catalog(manifest_url, cache, fetch=download):
         parsed = https_url(target)
         if (parsed.hostname, parsed.port) != (origin.hostname, origin.port):
             raise ValueError('Bundle must use the configured catalog origin.')
+        digest = manifest['sha256']
+        if (not isinstance(digest, str) or len(digest) != 64
+                or any(character not in '0123456789abcdef' for character in digest)):
+            raise ValueError('Invalid bundle checksum.')
+        if manifest['release'] <= cache.installed_release():
+            return cache.installed_release()
         raw = fetch(target, size)
         if len(raw) != size or hashlib.sha256(raw).hexdigest() != manifest['sha256']:
             raise ValueError('Catalog size or checksum does not match the manifest.')

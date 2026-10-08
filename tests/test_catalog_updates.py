@@ -42,8 +42,10 @@ def test_invalid_download_leaves_current_catalog_untouched(tmp_path):
     before = cache.path.read_bytes()
     for overrides in (dict(sha256='bad'), dict(size=1), dict(release=50),
                       dict(bundle='https://another.example/catalog.json'), dict(schema_version=99)):
+        settings = dict(release=2)
+        settings.update(overrides)
         with pytest.raises(CatalogUpdateError):
-            update_catalog('https://example.org/manifest.json', cache, fetcher(bundle(2), **overrides))
+            update_catalog('https://example.org/manifest.json', cache, fetcher(bundle(2), **settings))
         assert cache.path.read_bytes() == before
 
 
@@ -93,3 +95,28 @@ def test_download_failure_does_not_create_a_cache(tmp_path):
     with pytest.raises(CatalogUpdateError, match='network disconnected'):
         update_catalog('https://example.org/manifest.json', cache, failed)
     assert not cache.path.exists()
+
+
+def test_current_release_skips_bundle_download(tmp_path):
+    cache = CatalogCache(tmp_path)
+    raw = bundle()
+    cache.install(raw)
+    original = fetcher(raw)
+    calls = []
+    def fetch(url, limit):
+        calls.append(url)
+        return original(url, limit)
+    assert update_catalog('https://example.org/manifest.json', cache, fetch) == 1
+    assert calls == ['https://example.org/manifest.json']
+
+
+def test_unusable_latest_snapshot_does_not_hide_new_update(tmp_path):
+    cache = CatalogCache(tmp_path)
+    cache.install(bundle(1))
+    cache.install(bundle(2))
+    with sqlite3.connect(cache.path) as connection:
+        connection.execute('UPDATE releases SET body=? WHERE release=2', (b'broken',))
+    assert cache.installed_release() == 1
+    # A newer release can repair a corrupted cache; older publication numbers remain rejected.
+    assert update_catalog('https://example.org/manifest.json', cache,
+                          fetcher(bundle(3), release=3)) == 3

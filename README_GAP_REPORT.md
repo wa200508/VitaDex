@@ -6,7 +6,7 @@ The README remains the product specification. Android is the first target platfo
 
 - Transactional offline catalog cache, validated publication/update commands, same-origin
   bounded HTTPS downloads, checksum and rollback checks, and previous-release recovery.
-  Startup has no network access; a hosted Android update service is not enabled yet.
+  Startup has no network access. Public GitHub-hosted files and an explicit Android update button are implemented; no background polling is enabled.
 - Local cartoon artwork with original-photo choice, fact review/citation metadata,
   source-constrained future discussion hooks, and an offline topic-based field guide.
 - Single-card Letter/A4 PDF front/back export with cut marks, bleed, embedded fonts,
@@ -22,7 +22,7 @@ The README remains the product specification. Android is the first target platfo
 - Encounter IDs, UTC recording timestamps, photo references, model source, and score persisted in journal version 2. Existing version-1 SQLite/JSON snapshots remain readable and migrate without losing their content.
 - Journal protection: unreadable collections are kept unchanged, failures are visible, and only durable saves appear in the collection. Popups restore the prior popup after nested errors, supporting Back-button recovery.
 - Scrollable/wrapped descriptions and details, responsive card-grid columns, stacked collection controls, explicit dismissal controls, and Android Back handling.
-- Android build configuration and Java helpers for local inference and private document-URI copying. Only CAMERA is declared and requested on demand; document import needs no broad storage permission. The camera is stopped/released on dismissal and pause.
+- Android build configuration and Java helpers for local inference and private document-URI copying. CAMERA is requested on demand; INTERNET is declared for explicit catalog downloads; document import needs no broad storage permission. The camera is stopped/released on dismissal and pause.
 - A public, pinned identification-model downloader with SHA-256 verification and atomic installation. Getting Started now uses this runnable setup; the product goals in the README remain intact.
 
 ## Remaining work
@@ -41,7 +41,7 @@ The README remains the product specification. Android is the first target platfo
 
 ## Validation
 
-The latest local check passed 100 tests, Ruff, and Python compilation on Python 3.12. Tests cover catalog/schema invariants, conservative model output handling, real downloaded-model inference, label alignment, model-download integrity, private photo handling, scan cancellation/failure/shutdown, journal protections, version-1 migration, transactional catalog updates, PDF output/overflow/failure behavior, and document-picker callback handling.
+The latest local check passed 108 tests, Ruff, and Python compilation on Python 3.12. Tests cover catalog/schema invariants, conservative model output handling, real downloaded-model inference, label alignment, model-download integrity, private photo handling, scan cancellation/failure/shutdown, journal protections, version-1 migration, transactional catalog updates, PDF output/overflow/failure behavior, and document-picker callback handling.
 
 A Kivy flow rendered at phone-sized windows and exercised a real photo, suggested-match review, simulated disk-full recovery, persistence, separate fictional samples, and Back navigation. Native Java helpers compiled against Android API 35/TensorFlow Lite 2.16.1, and a PyJNIus byte/float round trip passed. A small real-flower corpus check demonstrates category breadth, not species accuracy. Details and restart instructions are in `WORK_LOG.md`.
 

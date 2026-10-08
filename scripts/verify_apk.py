@@ -28,7 +28,8 @@ def verify_apk(path, arch):
     with ZipFile(path) as apk:
         with tarfile.open(fileobj=io.BytesIO(apk.read(f'lib/{arch}/libpybundle.so'))) as bundle:
             names = set(bundle.getnames())
-            for required in ('reportlab/pdfgen/canvas.pyc', 'charset_normalizer/md.pyc'):
+            for required in ('reportlab/pdfgen/canvas.pyc', 'charset_normalizer/md.pyc',
+                             'certifi/cacert.pem'):
                 if not any(name.endswith('/' + required) for name in names):
                     raise ValueError(f'PDF dependency missing: {required}')
             for member in bundle.getmembers():
@@ -40,6 +41,7 @@ def verify_apk(path, arch):
         with tarfile.open(fileobj=io.BytesIO(apk.read('assets/private.tar'))) as private:
             names = set(private.getnames())
             for required in ('print_export.pyc', 'narration.pyc', 'collection_assets.pyc',
+                             'catalog_jobs.pyc',
                              'assets/fonts/DejaVuSans.ttf',
                              'assets/fonts/DejaVuSans-Bold.ttf', 'assets/fonts/LICENSE.txt'):
                 if required not in names:

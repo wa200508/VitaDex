@@ -7,12 +7,12 @@ source.include_exts = py,json,svg,png,jpg,jpeg,kv,atlas,ttf,txt,wav,ogg,tflite
 source.exclude_dirs = tests,scripts,.git,.github,.codex,.agents,.aws,.pytest_cache,.ruff_cache,__pycache__,.venv,android_src,p4a-recipes,artifacts,tmp,output,docs
 source.exclude_patterns = download_models.py
 version = 0.1.0
-requirements = python3,kivy==2.3.1,filetype,pillow,pyjnius,reportlab==4.4.9,charset-normalizer==3.4.4,chardet==5.2.0
+requirements = python3,kivy==2.3.1,filetype,pillow,pyjnius,reportlab==4.4.9,charset-normalizer==3.4.4,chardet==5.2.0,certifi==2026.7.22
 orientation = portrait
 fullscreen = 0
 # Photo capture requests CAMERA on demand; importing uses the system document picker.
 # No microphone, location, network, or broad storage permissions.
-android.permissions = CAMERA
+android.permissions = CAMERA, INTERNET
 android.add_src = android_src
 android.extra_manifest_xml = android_src/tts_queries.xml
 android.gradle_dependencies = org.tensorflow:tensorflow-lite:2.16.1

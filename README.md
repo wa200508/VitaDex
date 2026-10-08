@@ -40,7 +40,7 @@ The concept and descriptive content in this README are intended to support this 
 
 See [the architecture and delivery plan](docs/OFFLINE_CATALOG.md) for curated facts,
 battery-friendly catalog updates, private cartoon artwork and print export.
-Current nature entries are drafts. Safe catalog caching and single-card PDF export are implemented; hosted Android synchronization remains pending.
+Current nature entries are drafts. Safe catalog caching and single-card PDF export are implemented; a public catalog endpoint and explicit Android update checks are implemented. Scientific publication awaits review; background synchronization remains pending.
 
 See [catalog operations](docs/CATALOG_OPERATIONS.md) and [printing](docs/PRINTING.md).
 

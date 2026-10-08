@@ -187,3 +187,18 @@ All 87 application tests and Ruff still pass; the rebuilt APK gate remains manda
   Android speech API and exercised installed/offline voice selection, stop-before-init,
   stale utterance callbacks, missing voices and shutdown. Callback state changes now
   synchronize with speak/stop so a stale completion cannot overwrite a newer utterance.
+
+## Public catalog host and explicit Android updates (2026-10-07)
+
+User approved public repository hosting. Initialized `codex/catalog-publications` with
+an explicit awaiting-review manifest and README, containing no scientific publication.
+Added validated, non-force Git publication automation for complete reviewed inputs;
+retries cannot change existing release content. Added a Home update dialog and one
+background download worker. No startup/scan/periodic networking. Cached updates apply
+on next launch and leave saved fact snapshots unchanged. Bundled pinned certifi roots
+for Android HTTPS and made their presence an APK gate. INTERNET is now declared.
+
+108 local tests, Ruff, compileall and diff checks passed. The actual public HTTPS
+endpoint returned awaiting_review through the app downloader; update correctly refused
+to install it and created no cache. Scientific draft remains pending independent review.
+Android packaging and native networking require the new build/device validation.

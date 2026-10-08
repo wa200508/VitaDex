@@ -1,0 +1,46 @@
+name: Publish reviewed catalog
+
+on:
+  push:
+    branches: [development/readme-android, main]
+    paths:
+      - data/reviewed/**
+      - scripts/prepare_catalog_host.py
+      - scripts/publish_catalog.py
+      - catalog_review.py
+      - .github/workflows/catalog-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/catalog-publications
+          path: published
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate scientific review and prepare public files
+        run: python source/scripts/prepare_catalog_host.py --source source/data/reviewed --output published
+      - name: Publish without rewriting prior history
+        working-directory: published
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish validated VitaDex catalog'
+            git push origin HEAD:codex/catalog-publications
+          fi

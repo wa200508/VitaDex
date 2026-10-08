@@ -25,6 +25,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
 
 from database import CARD_DB, NATURE_DB
 from catalog_updates import CatalogCache
+from catalog_jobs import CatalogUpdateWorker
 from identification import DEFAULT_SAFETY_MESSAGE, DemoIdentificationService, IdentificationResult
 from journal import JournalError, JournalRepository, JournalSession
 from local_model import LocalIdentificationService
@@ -415,6 +416,11 @@ class HomeScreen(Screen):
         ))
 
         layout.add_widget(button_layout)
+        self.catalog_button = OutlineButton(
+            text='Check for catalog updates', size_hint_y=None, height=60,
+            on_release=lambda *_: App.get_running_app().confirm_catalog_update(),
+        )
+        layout.add_widget(self.catalog_button)
 
         feature_box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)
         feature_box.bind(minimum_height=feature_box.setter('height'))
@@ -974,10 +980,12 @@ class VitaDexApp(App):
             legacy_path=Path(self.user_data_dir) / 'journal.json',
         )
         self.demo_identification_service = DemoIdentificationService(CARD_DB)
-        self.nature_catalog = CatalogCache(Path(self.user_data_dir) / 'catalog').load(NATURE_DB)
+        self.catalog_cache = CatalogCache(Path(self.user_data_dir) / 'catalog')
+        self.nature_catalog = self.catalog_cache.load(NATURE_DB)
         self.identification_service = LocalIdentificationService(self.nature_catalog)
         self.photo_store = PhotoStore(Path(self.user_data_dir) / 'photos')
         schedule = lambda callback: Clock.schedule_once(lambda _: callback(), 0)
+        self.catalog_worker = CatalogUpdateWorker(self.catalog_cache, schedule)
         self.scan_worker = ScanWorker(self.photo_store, self.identification_service, schedule)
         self.artwork_worker = ArtworkWorker(self.photo_store, schedule)
         self.photo_picker = AndroidPhotoPicker(schedule)
@@ -1004,6 +1012,44 @@ class VitaDexApp(App):
         manager.add_widget(self.demo_screen)
         manager.add_widget(self.card_book_screen)
         return manager
+
+    def confirm_catalog_update(self):
+        content = BoxLayout(orientation='vertical', padding=12, spacing=12)
+        content.add_widget(build_wrapped_label(
+            'Download reviewed organism facts from VitaDex on GitHub? This uses your internet '
+            'connection (up to 8 MB). Photos and your card book stay on this device. '
+            'VitaDex checks only when you choose to check.', height=150))
+        popup = Popup(title='Catalog updates', content=scrollable_layout(content),
+                      size_hint=(0.9, 0.7))
+
+        def check(*_):
+            popup.dismiss()
+            button = self.home_screen.catalog_button
+
+            def reset():
+                button.disabled = False
+                button.text = 'Check for catalog updates'
+
+            def ready(release, changed):
+                reset()
+                message = (f'Catalog {release} is saved. Restart VitaDex to use it for new '
+                           'observations. Your saved cards keep their original facts.' if changed
+                           else f'Catalog {release} is already up to date.')
+                show_message('Catalog updates', message)
+
+            def failed(error):
+                reset()
+                show_message('Catalog unchanged', error)
+
+            if self.catalog_worker.start(ready, failed):
+                button.disabled = True
+                button.text = 'Checking catalog…'
+        content.add_widget(OutlineButton(text='Check now', size_hint_y=None, height=52,
+                                        on_release=check))
+        content.add_widget(OutlineButton(text='Cancel', size_hint_y=None, height=52,
+                                        on_release=lambda *_: popup.dismiss()))
+        track_popup(popup)
+        popup.open()
 
     def refresh_collection(self, old_card, new_card=None):
         self.new_cards[:] = [new_card if item is old_card else item for item in self.new_cards
@@ -1216,6 +1262,7 @@ class VitaDexApp(App):
         return True
 
     def on_stop(self):
+        self.catalog_worker.close()
         if self.narration is not None:
             self.narration.close()
         self.scan_worker.close()
