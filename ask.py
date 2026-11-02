@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 import json
 import re
 import time
-from threading import Event
+from threading import Event, Thread
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
@@ -34,12 +34,15 @@ class SessionProvider:
 
     def clear(self):
         self.key = ''
-        response = self.response
+        response, self.response = self.response, None
         if response:
-            try:
-                response.close()
-            except OSError:
-                pass
+            def close():
+                try:
+                    response.close()
+                except OSError:
+                    pass
+            # Closing a buffered socket can wait on another thread's read lock.
+            Thread(target=close, daemon=True).start()
 
     def select(self, question, passages, cancel):
         if cancel.is_set():
@@ -56,14 +59,15 @@ class SessionProvider:
         request = Request(self.endpoint, data=body, headers={
             'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.key}, method='POST')
         try:
-            self.response = build_opener(NoRedirect()).open(request, timeout=15)
+            response = build_opener(NoRedirect()).open(request, timeout=15)
+            self.response = response
             if cancel.is_set():
                 raise AskError('Request cancelled.')
             chunks, total, deadline = [], 0, time.monotonic() + 15
             while total <= 65536:
                 if cancel.is_set() or time.monotonic() > deadline:
                     raise AskError('Request cancelled or timed out.')
-                block = self.response.read1(min(4096, 65537 - total))
+                block = response.read1(min(4096, 65537 - total))
                 if not block:
                     break
                 chunks.append(block)

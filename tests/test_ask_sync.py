@@ -135,3 +135,20 @@ def test_no_provider_call_without_supported_evidence():
         def select(self, *args):
             raise AssertionError('No network work should be requested')
     assert not answer_card(dog(), 'What is the speed of light?', Provider(), True).passages
+
+
+def test_clearing_provider_does_not_block_ui_on_a_busy_socket():
+    from threading import Event
+    entered, release, finished = Event(), Event(), Event()
+    class BusyResponse:
+        def close(self):
+            entered.set()
+            assert release.wait(2)
+            finished.set()
+    provider = SessionProvider('https://provider.test/v1', 'model', 'session-key')
+    provider.response = BusyResponse()
+    provider.clear()
+    assert not provider.key and provider.response is None
+    assert entered.wait(1)
+    release.set()
+    assert finished.wait(1)
