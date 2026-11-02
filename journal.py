@@ -10,6 +10,7 @@ from threading import RLock
 
 from identity import organism_key
 from validation import validate_model
+from editorial import digest
 
 from database import Card, CardBackground, OrganismEntry
 from provenance import validate_provenance
@@ -110,6 +111,31 @@ class JournalRepository:
                 return card, True
         except (sqlite3.Error, OSError, ValueError, TypeError, KeyError) as error:
             raise JournalError(f'Could not append card: {error}') from error
+
+    def update_card(self, previous, replacement):
+        """Explicit compare-and-swap update, archiving the original source-bearing snapshot."""
+        key = organism_key(previous.organism)
+        if organism_key(replacement.organism) != key:
+            raise JournalError('A fact update cannot change the species identity.')
+        try:
+            serialized = self._serialize(replacement)
+            with closing(self._connect()) as connection, connection:
+                connection.execute('BEGIN IMMEDIATE')
+                self._initialize(connection)
+                row = connection.execute(
+                    'SELECT position, card_json FROM cards JOIN discoveries ON position = card_position '
+                    'WHERE organism_key = ?', (key,)).fetchone()
+                if row is None or digest(self._card_to_dict(self._card_from_dict(json.loads(row['card_json'])))) != digest(self._card_to_dict(previous)):
+                    raise JournalError('Saved card changed; reopen the update preview.')
+                connection.execute('CREATE TABLE IF NOT EXISTS card_history ('
+                    'id INTEGER PRIMARY KEY, organism_key TEXT NOT NULL, card_json TEXT NOT NULL, '
+                    "archived_on TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+                connection.execute('INSERT INTO card_history(organism_key, card_json) VALUES (?, ?)',
+                                   (key, row['card_json']))
+                connection.execute('UPDATE cards SET card_json = ? WHERE position = ?',
+                                   (serialized, row['position']))
+        except (sqlite3.Error, OSError, TypeError, ValueError) as error:
+            raise JournalError(f'Could not update saved facts: {error}') from error
 
     def _connect(self) -> sqlite3.Connection:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -287,6 +313,18 @@ class JournalSession:
                 self._index_card(saved)
                 self.revision += 1
             return existing or saved, first
+
+    def update_card(self, previous, replacement):
+        if self.load_error is not None:
+            raise JournalError('The journal could not be opened. No changes were saved.')
+        with self.lock:
+            position = next((i for i, card in enumerate(self.cards) if card is previous), None)
+            if position is None:
+                raise JournalError('Saved card changed; reopen the update preview.')
+            self.repository.update_card(previous, replacement)
+            self.cards[position] = replacement
+            self.by_key[organism_key(replacement.organism)] = replacement
+            self.revision += 1
 
     def _index_card(self, card):
         self.by_key.setdefault(organism_key(card.organism), card)

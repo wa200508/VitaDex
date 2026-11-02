@@ -99,6 +99,7 @@ def test_native_lifecycle_with_simulated_android_handle(monkeypatch):
         engine.synth, engine.status = handle, 0
         engine.ready.set()
     monkeypatch.setattr(engine, '_initialize', initialize)
+    monkeypatch.setattr(engine, '_offline_android_voice', lambda: None)
     starts = []
     engine.run('Introduction', Event(), lambda: starts.append(True))
     assert starts == [True]

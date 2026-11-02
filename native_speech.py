@@ -73,6 +73,7 @@ class NativeEngine:
             if cancel.is_set() or self.closed:
                 return
             if self.platform == 'android':
+                self._offline_android_voice()
                 if self.synth.speak(text, 0, None, 'vitadex-introduction') == -1:
                     raise RuntimeError('Android speech request failed.')
             else:
@@ -96,6 +97,23 @@ class NativeEngine:
                 raise RuntimeError('Native speech did not complete.')
         self.stop()
 
+    def _offline_android_voice(self):
+        if getattr(self, 'voice_configured', False):
+            return
+        voices = self.synth.getVoices()
+        if voices is None:
+            raise RuntimeError('No installed offline voice. Install an English system voice to listen.')
+        iterator = voices.iterator()
+        candidates = []
+        while iterator.hasNext():
+            voice = iterator.next()
+            if not voice.isNetworkConnectionRequired() and str(voice.getLocale().getLanguage()) == 'en':
+                candidates.append(voice)
+        candidates.sort(key=lambda voice: (str(voice.getLocale().getCountry()) != 'US', str(voice.getName())))
+        if not candidates or self.synth.setVoice(candidates[0]) != 0:
+            raise RuntimeError('No usable offline English voice. Read the card or install a system voice.')
+        self.voice_configured = True
+
     def stop(self):
         def stop():
             if self.synth is not None:
@@ -113,6 +131,7 @@ class NativeEngine:
     def resume(self):
         self.closed = False
         self.ready.clear()
+        self.voice_configured = False
         self.status = None
 
     def close(self):

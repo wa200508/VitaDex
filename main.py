@@ -29,6 +29,9 @@ from discovery import DiscoveryService, introduction
 from narration import LocalSpeaker
 from identity import organism_key
 from uuid import uuid4
+from dataclasses import asdict
+from editorial import changed_fields
+from diagnostics import DeviceTrace
 from journal import JournalError, JournalRepository, JournalSession
 
 PAPER = (0.96, 0.95, 0.91, 1)
@@ -525,6 +528,9 @@ class VitaDexApp(App):
         return self.journal_session.is_new(card)
 
     def build(self):
+        self.trace = DeviceTrace(self.user_data_dir,
+            enabled=(Path(self.user_data_dir) / 'diagnostics.enabled').exists())
+        self.trace.record('app.start')
         self.foreground = True
         Window.clearcolor = PAPER
         Window.bind(on_keyboard=self._on_keyboard)
@@ -597,6 +603,8 @@ class VitaDexApp(App):
             if show_known:
                 self.message('Keep observing', result.safety_message)
             return
+        self.trace.record('discovery.first' if discovery.is_first else 'discovery.repeat',
+                          card_id=organism_key(discovery.card.organism))
         if discovery.is_first:
             self.refresh()
             self.open_card(discovery.card, saved=True)
@@ -614,6 +622,8 @@ class VitaDexApp(App):
         self.latest_utterance = uid
         target = self.card_voice_status if getattr(self, 'open_card_key', None) == key else None
         def event(event):
+            self.trace.record('speech.' + event.state, utterance_id=event.utterance_id,
+                              card_id=event.card_id, state=event.state)
             def update(_):
                 text = {'requested': 'Introduction queued.', 'started': 'Playing introduction.',
                         'completed': 'Introduction finished.', 'cancelled': 'Introduction stopped.',
@@ -649,18 +659,25 @@ class VitaDexApp(App):
         self.refresh()
 
     def on_stop(self):
+        if hasattr(self, 'trace'):
+            self.trace.record('app.stop')
         self.foreground = False
         if hasattr(self, 'speaker'):
             self.speaker.close()
+        if hasattr(self, 'trace'):
+            self.trace.flush()
 
     def on_pause(self):
         self.foreground = False
+        self.trace.record('app.pause')
         self.speaker.pause()
+        self.trace.flush()
         return True
 
     def on_resume(self):
         self.speaker.resume()
         self.foreground = True
+        self.trace.record('app.resume')
 
     def open_card(self, card, saved=False):
         self.open_card_key = organism_key(card.organism)
@@ -700,6 +717,11 @@ class VitaDexApp(App):
             detail.add_widget(label(heading, size=11, color=GREEN, bold=True))
             detail.add_widget(label(text + (claim_sources(card.organism, field) if field else ''),
                                     size=15, color=MUTED))
+        current = next((entry for entry in CARD_DB.organisms.values()
+                        if organism_key(entry) == organism_key(card.organism)), None)
+        if current is not None and asdict(current) != asdict(card.organism):
+            detail.add_widget(Action(text='Review available fact update',
+                                     on_release=lambda *_: self.preview_update(card, current)))
         detail.add_widget(label('SOURCES & INFORMATION', size=13, color=GREEN, bold=True))
         if card.organism.content_kind == 'fictional':
             detail.add_widget(label(
@@ -752,6 +774,45 @@ class VitaDexApp(App):
             view.bind(on_release=lambda *_: (popup.dismiss(), self.navigate('cardbook')))
         popup.bind(on_dismiss=lambda *_: setattr(self, 'fullscreen_popup', None))
         self.fullscreen_popup = popup
+        popup.open()
+
+    def preview_update(self, card, organism):
+        changes = changed_fields(asdict(card.organism), asdict(organism))
+        content = BoxLayout(orientation='vertical', padding=dp(12), spacing=dp(12))
+        scroll = ScrollView(do_scroll_x=False)
+        body = column()
+        body.add_widget(label('Changed: ' + ', '.join(changes), size=15))
+        body.add_widget(label('Current catalog introduction:\n' + organism.description, size=16))
+        body.add_widget(label(
+            'The original saved facts and references will be archived. '
+            'This updates the fact sheet without another first-discovery announcement.\n'
+            + provenance_status(organism), size=14, color=MUTED))
+        for source in organism.sources:
+            body.add_widget(label(source['title'] + '\n' + source['url'], size=13, color=MUTED))
+        scroll.add_widget(body)
+        content.add_widget(scroll)
+        cancel = Action(text='Keep saved version')
+        confirm = Action(text='Update saved facts', primary=True)
+        content.add_widget(cancel)
+        content.add_widget(confirm)
+        popup = Popup(title='Review fact update', content=content, size_hint=(.94, .9),
+                      background='', background_color=PAPER, title_color=GREEN)
+        cancel.bind(on_release=popup.dismiss)
+        def apply(*_):
+            try:
+                replacement = CARD_DB.build_card(organism)
+                replacement.background, replacement.art_asset = card.background, card.art_asset
+                self.journal_session.update_card(card, replacement)
+            except (JournalError, ValueError) as error:
+                popup.dismiss()
+                self.show_storage_error(str(error))
+                return
+            popup.dismiss()
+            if self.fullscreen_popup:
+                self.fullscreen_popup.dismiss(animation=False)
+            self.refresh()
+            self.open_card(replacement)
+        confirm.bind(on_release=apply)
         popup.open()
 
     def message(self, title, text):
