@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from provenance import validate_provenance
+from validation import validate_model
+from identity import organism_key
+
 
 DATA_PATH = Path(__file__).parent / 'data' / 'database.json'
 
@@ -40,6 +44,12 @@ class OrganismEntry:
     notes: str = ''
     physical_dimensions: str = ''
     habitat_type: str = ''
+    content_kind: str = 'unreviewed'
+    scientific_name: str = ''
+    organism_id: str = ''
+    sources: List[dict] = field(default_factory=list)
+    reviewed_by: str = ''
+    reviewed_on: str = ''
 
 
 @dataclass
@@ -95,6 +105,12 @@ class CardDatabase:
             if not isinstance(data.get(section), list):
                 raise ValueError(f'Card database section {section!r} must be a list.')
 
+        for item in data['background_templates']:
+            validate_model(item, CardBackground)
+        for item in data['organisms']:
+            validate_model(item, OrganismEntry)
+        for item in data['art_assets']:
+            validate_model(item, OrganismArt)
         backgrounds = data['background_templates']
         organisms = data['organisms']
         art_assets = data['art_assets']
@@ -117,6 +133,7 @@ class CardDatabase:
             background_ids.add(background['id'])
 
         organism_names = set()
+        organism_keys = set()
         for organism in organisms:
             if not isinstance(organism, dict):
                 raise ValueError('Every organism must be an object.')
@@ -129,6 +146,11 @@ class CardDatabase:
                 raise ValueError('Every organism must have a non-empty name.')
             if organism['name'] in organism_names:
                 raise ValueError(f'Duplicate organism name: {organism["name"]!r}.')
+            validate_provenance(organism)
+            key = organism_key(OrganismEntry(**organism))
+            if key in organism_keys:
+                raise ValueError(f'Duplicate organism identity: {key}.')
+            organism_keys.add(key)
             organism_names.add(organism['name'])
 
         for art in art_assets:
@@ -151,7 +173,7 @@ class CardDatabase:
             with path.open('r', encoding='utf-8') as handle:
                 data = json.load(handle)
             return cls.from_json(data)
-        return cls.from_json(DEFAULT_DATABASE)
+        raise FileNotFoundError(f'Catalog not found: {path}. Restore the bundled data/database.json.')
 
     def get_organism(self, name: str) -> Optional[OrganismEntry]:
         return self.organisms.get(name)
@@ -181,6 +203,11 @@ class CardDatabase:
         return random.sample(organism.move_set, min(count, len(organism.move_set)))
 
     def build_card(self, organism: OrganismEntry) -> Card:
+        from dataclasses import asdict
+        validate_model(asdict(organism), OrganismEntry)
+        validate_provenance(asdict(organism))
+        if organism.content_kind == 'unreviewed':
+            raise ValueError('Real organism cards require reviewed, cited content before collection.')
         background = self.select_background_for(organism)
         art_asset = self.select_art_asset(organism)
         selected_moves = self.select_moves(organism)
@@ -228,6 +255,7 @@ DEFAULT_DATABASE = {
     'organisms': [
         {
             'name': 'Glowleaf Beetle',
+            'content_kind': 'fictional',
             'type': 'Bug',
             'move_set': ['Leaf Glow', 'Sticky Climb', 'Camouflage Drift', 'Moss Spark'],
             'description': 'A small forest crawler that lights up mossy paths and helps break down fallen leaves.',
@@ -243,6 +271,7 @@ DEFAULT_DATABASE = {
         },
         {
             'name': 'Streamfin Dart',
+            'content_kind': 'fictional',
             'type': 'Fish',
             'move_set': ['Ripple Dash', 'Bubble Flicker', 'Current Veil'],
             'description': 'A fast-moving water creature that darts through stream pools and helps keep currents clean.',
@@ -258,6 +287,7 @@ DEFAULT_DATABASE = {
         },
         {
             'name': 'Sunflare Sprout',
+            'content_kind': 'fictional',
             'type': 'Plant',
             'move_set': ['Solar Reach', 'Petal Shield', 'Seed Drift'],
             'description': 'A bright, cheerful plant that opens in sunlight and provides food and shelter to small wildlife.',
@@ -292,4 +322,5 @@ DEFAULT_DATABASE = {
 }
 
 
+DEMO_DB = CardDatabase.from_json(DEFAULT_DATABASE)
 CARD_DB = CardDatabase.load_default()

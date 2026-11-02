@@ -1,718 +1,783 @@
+"""VitaDex's local card journal interface."""
+import math
 import os
-import time
+import webbrowser
 from pathlib import Path
 
-# Disable Kivy Inspector to prevent red dots on right-click
 os.environ['KIVY_INSPECTOR'] = '0'
 
-from kivy.animation import Animation
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Color, Line, RoundedRectangle
-from kivy.logger import Logger
-from kivy.properties import ListProperty
+from kivy.graphics import Color, Ellipse, Line, RoundedRectangle, Triangle
+from kivy.metrics import dp
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import Screen, ScreenManager, NoTransition
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
+from kivy.uix.spinner import Spinner
+from kivy.uix.textinput import TextInput
+from kivy.uix.widget import Widget
 
 from database import CARD_DB
-from identification import DemoIdentificationService, IdentificationResult
-from journal import JournalError, JournalRepository
+from identification import DemoIdentificationService, IdentificationCandidate, IdentificationResult
+from discovery import DiscoveryService, introduction
+from narration import LocalSpeaker
+from identity import organism_key
+from uuid import uuid4
+from journal import JournalError, JournalRepository, JournalSession
+
+PAPER = (0.96, 0.95, 0.91, 1)
+WHITE = (1, 0.995, 0.97, 1)
+INK = (0.12, 0.23, 0.19, 1)
+MUTED = (0.38, 0.45, 0.39, 1)
+GREEN = (0.16, 0.36, 0.27, 1)
+PALE = (0.87, 0.91, 0.84, 1)
+BORDER = (0.82, 0.85, 0.78, 1)
+GOLD = (0.76, 0.51, 0.19, 1)
 
 
-def build_wrapped_label(text, font_size='18sp', height=140):
-    label = Label(
-        text=text,
-        font_size=font_size,
-        color=(1, 1, 1, 1),
-        halign='center',
-        valign='middle',
-        size_hint=(1, None),
-        height=height,
-        text_size=(Window.width - 40, None),
-    )
-
-    def update_text_size(_, width):
-        label.text_size = (width, None)
-
-    label.bind(width=update_text_size)
-    return label
+def provenance_status(organism):
+    return {'fictional': 'FICTIONAL / no factual sources',
+            'unreviewed': 'UNREVIEWED / facts not verified',
+            'source_checked': 'SOURCE CHECKED / human review pending',
+            'reviewed': f'REVIEWED / {len(organism.sources)} references'}[organism.content_kind]
 
 
-def styled_layout(layout):
-    with layout.canvas.before:
-        Color(0.03, 0.05, 0.1, 1)
-        layout._bg_rect = RoundedRectangle(pos=layout.pos, size=layout.size, radius=[24])
-        Color(0.08, 0.14, 0.22, 1)
-        layout._bg_border = Line(rounded_rectangle=(layout.x, layout.y, layout.width, layout.height, 24), width=2)
-
-    def update_layout(_, __):
-        layout._bg_rect.pos = layout.pos
-        layout._bg_rect.size = layout.size
-        layout._bg_border.rounded_rectangle = (layout.x, layout.y, layout.width, layout.height, 24)
-
-    layout.bind(pos=update_layout, size=update_layout)
-    return layout
+def claim_sources(organism, field):
+    ids = [source['id'] for source in organism.sources if field in source['supports']]
+    return ('  [' + ', '.join(ids) + ']') if ids else ''
 
 
-class OutlineButton(Button):
-    def __init__(self, **kwargs):
-        kwargs.setdefault('background_normal', '')
-        kwargs.setdefault('background_color', (0, 0, 0, 0))
-        kwargs.setdefault('color', (1, 1, 1, 1))
-        kwargs.setdefault('font_size', '16sp')
-        kwargs.setdefault('bold', True)
-        kwargs.setdefault('markup', False)
-        kwargs.setdefault('padding', (16, 12))
-        super().__init__(**kwargs)
+def label(text='', size=16, color=INK, bold=False, **kwargs):
+    """A wrapping label whose height follows its content."""
+    widget = Label(text=text, font_size=dp(size), color=color, bold=bold,
+                   halign='left', valign='middle', size_hint_y=None, **kwargs)
+    widget.bind(width=lambda item, width: setattr(item, 'text_size', (max(1, width), None)))
+    widget.bind(texture_size=lambda item, size: setattr(item, 'height', size[1] + dp(6)))
+    return widget
+
+
+def column(spacing=12, padding=0, **kwargs):
+    box = BoxLayout(orientation='vertical', spacing=dp(spacing), padding=dp(padding),
+                    size_hint_y=None, **kwargs)
+    box.bind(minimum_height=box.setter('height'))
+    return box
+
+
+def surface(widget, color=WHITE, radius=20):
+    with widget.canvas.before:
+        Color(*color)
+        background = RoundedRectangle(pos=widget.pos, size=widget.size, radius=[dp(radius)])
+    def resize(*_):
+        background.pos, background.size = widget.pos, widget.size
+    widget.bind(pos=resize, size=resize)
+    return widget
+
+
+class Action(Button):
+    def __init__(self, primary=False, **kwargs):
+        super().__init__(background_normal='', background_down='',
+                         background_color=(0, 0, 0, 0), color=WHITE if primary else GREEN,
+                         font_size=dp(14), bold=True, disabled_color=MUTED,
+                         size_hint_y=None, height=dp(46), **kwargs)
+        self.primary = primary
         with self.canvas.before:
-            Color(0.05, 0.1, 0.2, 0.95)
-            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[20])
-            Color(0.3, 0.6, 0.92, 0.35)
-            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=1.4)
-        with self.canvas.after:
-            self._flash_color = Color(1, 0.84, 0.2, 0)
-            self._flash_line = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=2)
-        self.bind(pos=self.update_graphics, size=self.update_graphics)
+            self.fill = Color(*(GREEN if primary else PALE))
+            self.shape = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(12)])
+        self.bind(pos=self.redraw, size=self.redraw, state=self.redraw, disabled=self.redraw)
 
-    def update_graphics(self, *args):
-        self._bg.pos = self.pos
-        self._bg.size = self.size
-        self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
-        self._flash_line.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
+    def redraw(self, *_):
+        self.shape.pos, self.shape.size = self.pos, self.size
+        base = GREEN if self.primary else PALE
+        self.fill.rgba = (*base[:3], 0.4 if self.disabled else (0.7 if self.state == 'down' else 1))
+        self.text_size = (max(1, self.width - dp(12)), None)
+        self.halign = 'center'
 
-    def flash(self):
-        anim = Animation(a=1, d=0.15) + Animation(a=0, d=0.85)
-        anim.start(self._flash_color)
+
+class CreatureArt(Widget):
+    """Small original vector illustrations; no network or image dependencies."""
+    def __init__(self, organism, style='emerald', **kwargs):
+        super().__init__(**kwargs)
+        self.organism, self.style = organism, style
+        self.bind(pos=self.draw, size=self.draw)
+
+    def draw(self, *_):
+        self.canvas.clear()
+        x, y, w, h = self.x, self.y, self.width, self.height
+        cx, cy, unit = x + w * .5, y + h * .50, min(w, h) * .32
+        colors = {'emerald': (.82, .88, .74, 1), 'blue': (.76, .88, .89, 1),
+                  'gold': (.96, .88, .66, 1)}
+        with self.canvas:
+            Color(*colors.get(self.style, colors['emerald']))
+            RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(16)])
+            Color(1, 1, .95, .38)
+            Ellipse(pos=(cx - unit * 1.2, cy - unit * 1.1), size=(unit * 2.4, unit * 2.4))
+            Color(.3, .48, .33, .18)
+            for i in range(7):
+                px = x + w * ((i * .173 + .11) % .9)
+                py = y + h * ((i * .29 + .16) % .85)
+                Ellipse(pos=(px, py), size=(dp(4), dp(4)))
+            if self.organism.type == 'Mammal':
+                is_cat = self.organism.scientific_name == 'Felis catus'
+                Color(*((.74, .47, .23, 1) if not is_cat else (.55, .57, .55, 1)))
+                Ellipse(pos=(cx-unit*.65, cy-unit*.65), size=(unit*1.3, unit*1.4))
+                if is_cat:
+                    Triangle(points=[cx-unit*.6, cy+unit*.2, cx-unit*.6, cy+unit,
+                                     cx-unit*.1, cy+unit*.55])
+                    Triangle(points=[cx+unit*.6, cy+unit*.2, cx+unit*.6, cy+unit,
+                                     cx+unit*.1, cy+unit*.55])
+                    Color(.91, .69, .62, 1)
+                    Triangle(points=[cx-unit*.48, cy+unit*.4, cx-unit*.49, cy+unit*.77,
+                                     cx-unit*.23, cy+unit*.52])
+                    Triangle(points=[cx+unit*.48, cy+unit*.4, cx+unit*.49, cy+unit*.77,
+                                     cx+unit*.23, cy+unit*.52])
+                else:
+                    Color(.43, .28, .17, 1)
+                    Ellipse(pos=(cx-unit*.9, cy-unit*.1), size=(unit*.48, unit*1.0))
+                    Ellipse(pos=(cx+unit*.42, cy-unit*.1), size=(unit*.48, unit*1.0))
+                Color(.94, .86, .68, 1)
+                Ellipse(pos=(cx-unit*.37, cy-unit*.5), size=(unit*.74, unit*.54))
+                Color(*INK)
+                for direction in (-1, 1):
+                    Ellipse(pos=(cx+direction*unit*.27-unit*.065, cy+unit*.13),
+                            size=(unit*.13, unit*.15))
+                    if is_cat:
+                        for offset in (-.1, .06, .2):
+                            Line(points=[cx+direction*unit*.2, cy-unit*.24,
+                                         cx+direction*unit*.85, cy+unit*(offset-.2)], width=1)
+                Triangle(points=[cx-unit*.12, cy-unit*.12, cx+unit*.12, cy-unit*.12,
+                                 cx, cy-unit*.27])
+                Line(points=[cx, cy-unit*.27, cx, cy-unit*.39], width=1.4)
+            elif self.organism.type == 'Tree':
+                Color(.42, .29, .18, 1)
+                RoundedRectangle(pos=(cx-unit*.1, cy-unit*1.05),
+                                 size=(unit*.2, unit*1.3), radius=[unit*.03])
+                for direction in (-1, 1):
+                    Line(points=[cx, cy-unit*.2, cx+direction*unit*.55, cy+unit*.45], width=dp(3))
+                # Original stylized lobed leaves, not diagnostic botanical drawings.
+                leaf = [(0, 1), (.22, .45), (.65, .65), (.5, .12), (.9, .1),
+                        (.48, -.3), (.1, -.55), (-.1, -.55), (-.48, -.3),
+                        (-.9, .1), (-.5, .12), (-.65, .65), (-.22, .45)]
+                for dx, dy, scale, tone in [(-.55, .3, .65, (.68, .35, .2, 1)),
+                                           (.5, .35, .66, (.77, .43, .23, 1)),
+                                           (0, .8, .7, (.87, .53, .25, 1))]:
+                    Color(*tone)
+                    px, py, size = cx+unit*dx, cy+unit*dy, unit*scale
+                    for i, point in enumerate(leaf):
+                        nxt = leaf[(i+1) % len(leaf)]
+                        Triangle(points=[px, py, px+point[0]*size, py+point[1]*size,
+                                         px+nxt[0]*size, py+nxt[1]*size])
+                    Color(.98, .77, .48, 1)
+                    Line(points=[px, py-size*.4, px, py+size*.65], width=1)
+            elif self.organism.type == 'Grass':
+                for i in range(11):
+                    dx = (i-5)*.15
+                    top = .2+((i*7) % 9)*.09
+                    Color(.22+i*.012, .42+i*.012, .24, 1)
+                    Triangle(points=[cx+unit*dx, cy-unit*.9,
+                                     cx+unit*(dx+.12), cy-unit*.9,
+                                     cx+unit*(dx*1.35), cy+unit*top])
+                for direction in (-1, 1):
+                    stem_x = cx+direction*unit*.35
+                    Color(.36, .54, .29, 1)
+                    Line(points=[stem_x, cy-unit*.8, stem_x, cy+unit*1.05], width=1.5)
+                    for i in range(4):
+                        height = cy+unit*(.35+i*.18)
+                        reach = unit*(.35-i*.07)
+                        for side in (-1, 1):
+                            Line(points=[stem_x, height, stem_x+side*reach, height+unit*.15], width=1)
+                            Ellipse(pos=(stem_x+side*reach, height+unit*.13), size=(unit*.09, unit*.12))
+            elif self.organism.type == 'Bird':
+                Color(.28, .32, .32, 1)
+                Triangle(points=[cx-unit*.6, cy-unit*.25, cx-unit*1.15, cy-unit*.55,
+                                 cx-unit*.95, cy+unit*.1])
+                Ellipse(pos=(cx-unit*.65, cy-unit*.6), size=(unit*1.35, unit*1.25))
+                Color(.72, .35, .2, 1)
+                Ellipse(pos=(cx-unit*.05, cy-unit*.49), size=(unit*.8, unit*.95))
+                Color(.23, .27, .27, 1)
+                Ellipse(pos=(cx+unit*.14, cy+unit*.23), size=(unit*.73, unit*.73))
+                Color(.36, .4, .39, 1)
+                Ellipse(pos=(cx-unit*.52, cy-unit*.17), size=(unit*.72, unit*.51))
+                Color(.89, .66, .19, 1)
+                Triangle(points=[cx+unit*.78, cy+unit*.65, cx+unit*1.15, cy+unit*.48,
+                                 cx+unit*.78, cy+unit*.42])
+                Color(*INK)
+                Ellipse(pos=(cx+unit*.61, cy+unit*.66), size=(unit*.1, unit*.1))
+                for dx in (-.18, .28):
+                    Line(points=[cx+unit*dx, cy-unit*.5, cx+unit*dx, cy-unit*.95,
+                                 cx+unit*(dx+.25), cy-unit*.95], width=1.5)
+            elif self.organism.type == 'Fish':
+                Color(.15, .42, .46, 1)
+                Triangle(points=[cx-unit*.55, cy, cx-unit*1.3, cy+unit*.65,
+                                 cx-unit*1.3, cy-unit*.65])
+                Color(.28, .62, .63, 1)
+                Ellipse(pos=(cx-unit*.8, cy-unit*.48), size=(unit*1.8, unit*.96))
+                Color(.9, .76, .36, 1)
+                Triangle(points=[cx-unit*.2, cy-unit*.15, cx+unit*.3, cy-unit*.1,
+                                 cx, cy-unit*.65])
+                Color(*INK)
+                Ellipse(pos=(cx+unit*.52, cy+unit*.05), size=(unit*.13, unit*.13))
+                Color(1, 1, 1, .7)
+                for i in range(3):
+                    Line(circle=(cx+unit*(1.15+i*.2), cy+unit*(.4+i*.4), unit*.1), width=1.2)
+            elif self.organism.type == 'Plant':
+                Color(*GREEN)
+                Line(points=[cx, cy-unit, cx, cy+unit*.35], width=dp(3))
+                Ellipse(pos=(cx, cy-unit*.65), size=(unit*.7, unit*.3))
+                Ellipse(pos=(cx-unit*.7, cy-unit*.3), size=(unit*.7, unit*.3))
+                Color(.91, .64, .21, 1)
+                for i in range(8):
+                    angle = i * math.pi / 4
+                    Ellipse(pos=(cx+math.cos(angle)*unit*.45-unit*.25,
+                                 cy+unit*.4+math.sin(angle)*unit*.45-unit*.25),
+                            size=(unit*.5, unit*.5))
+                Color(.37, .29, .16, 1)
+                Ellipse(pos=(cx-unit*.3, cy+unit*.1), size=(unit*.6, unit*.6))
+            else:
+                Color(*GREEN)
+                for direction in (-1, 1):
+                    for offset in (-.4, 0, .4):
+                        Line(points=[cx+direction*unit*.3, cy+offset*unit,
+                                     cx+direction*unit*.85, cy+(offset-.2)*unit], width=dp(2))
+                    Line(points=[cx+direction*unit*.18, cy+unit*.6,
+                                 cx+direction*unit*.4, cy+unit], width=dp(2))
+                Ellipse(pos=(cx-unit*.28, cy+unit*.35), size=(unit*.56, unit*.55))
+                Color(.3, .53, .29, 1)
+                Ellipse(pos=(cx-unit*.52, cy-unit*.65), size=(unit*1.04, unit*1.25))
+                Color(.72, .82, .35, 1)
+                Line(points=[cx, cy-unit*.6, cx, cy+unit*.5], width=dp(2))
+                for dx, dy in [(-.25, .2), (.25, -.1), (-.22, -.35)]:
+                    Ellipse(pos=(cx+unit*dx-unit*.08, cy+unit*dy-unit*.08), size=(unit*.16, unit*.16))
 
 
 class CardTile(ButtonBehavior, BoxLayout):
-    def __init__(self, card, on_open, **kwargs):
-        kwargs.setdefault('orientation', 'vertical')
-        kwargs.setdefault('padding', 14)
-        kwargs.setdefault('spacing', 6)
-        super().__init__(**kwargs)
-        self.card = card
-        self.on_open = on_open
-        with self.canvas.before:
-            Color(0.06, 0.1, 0.18, 1)
-            self._bg_rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[20])
-            Color(0.2, 0.45, 0.85, 0.35)
-            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 20), width=1.4)
-        self.bind(pos=self.update_graphics, size=self.update_graphics)
-        self.add_widget(Label(
-            text=card.card_art,
-            color=(1, 1, 1, 1),
-            font_size='34sp',
-            size_hint=(1, None),
-            height=62,
-            halign='center',
-            valign='middle',
-            text_size=(self.width - 28, None),
-        ))
-        self.add_widget(Label(
-            text=card.title,
-            color=(1, 1, 1, 1),
-            font_size='16sp',
-            bold=True,
-            size_hint=(1, None),
-            height=34,
-            halign='center',
-            valign='middle',
-            text_size=(self.width - 28, None),
-        ))
-        self.add_widget(Label(
-            text=f'{card.organism.type} • {card.organism.rarity}',
-            color=(0.8, 0.9, 1, 1),
-            font_size='12sp',
-            size_hint=(1, None),
-            height=24,
-            halign='center',
-            valign='middle',
-            text_size=(self.width - 28, None),
-        ))
-
-    def update_graphics(self, *args):
-        self._bg_rect.pos = self.pos
-        self._bg_rect.size = self.size
-        self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 20)
+    def __init__(self, card, on_open, is_new=False, **kwargs):
+        super().__init__(orientation='vertical', padding=dp(12), spacing=dp(8), **kwargs)
+        self.card, self.on_open = card, on_open
+        surface(self)
+        self.add_widget(CreatureArt(card.organism, card.background.style))
+        self.add_widget(label(('NEW  /  ' if is_new else '') + card.organism.type.upper(),
+                              size=10, color=GREEN, bold=True))
+        self.add_widget(label(card.title, size=18, bold=True))
+        self.add_widget(label(f'{card.organism.rarity}  •  {card.background.name}', size=12, color=MUTED))
+        self.add_widget(label(provenance_status(card.organism), size=10, color=GREEN))
 
     def on_release(self):
         self.on_open(self.card)
 
 
-class CardDetailView(ButtonBehavior, BoxLayout):
-    def __init__(self, on_tap=None, **kwargs):
-        kwargs.setdefault('orientation', 'vertical')
-        kwargs.setdefault('padding', 16)
-        kwargs.setdefault('spacing', 10)
-        super().__init__(**kwargs)
-        self.on_tap = on_tap
-        self.card = None
-        self.last_touch_time = 0
-        self.double_tap_threshold = 0.3
-        with self.canvas.before:
-            Color(0.06, 0.1, 0.18, 0.96)
-            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[24])
-            Color(0.2, 0.45, 0.85, 0.2)
-            self._border = Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 24), width=2)
-        self.bind(pos=self.update_graphics, size=self.update_graphics)
-        self.title_label = Label(
-            text='',
-            color=(1, 1, 1, 1),
-            font_size='22sp',
-            bold=True,
-            size_hint=(1, None),
-            height=36,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.65 - 32, None),
-        )
-        self.meta_label = Label(
-            text='',
-            color=(0.75, 0.9, 1, 1),
-            font_size='14sp',
-            size_hint=(1, None),
-            height=24,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.65 - 32, None),
-        )
-        self.details_label = Label(
-            text='',
-            color=(1, 1, 1, 1),
-            font_size='14sp',
-            halign='left',
-            valign='top',
-            size_hint=(1, None),
-            height=150,
-            text_size=(Window.width * 0.65 - 32, None),
-        )
-        self.stats_label = Label(
-            text='',
-            color=(0.8, 0.92, 1, 1),
-            font_size='13sp',
-            halign='left',
-            valign='top',
-            size_hint=(1, None),
-            height=100,
-            text_size=(Window.width * 0.65 - 32, None),
-        )
-        self.add_widget(self.title_label)
-        self.add_widget(self.meta_label)
-        self.add_widget(self.details_label)
-        self.add_widget(self.stats_label)
+class Page(Screen):
+    def __init__(self, name, title, subtitle, **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.body = BoxLayout(orientation='vertical', padding=dp(20), spacing=dp(12))
+        self.add_widget(self.body)
+        self.body.add_widget(label(title, size=30, bold=True))
+        self.body.add_widget(label(subtitle, size=14, color=MUTED))
 
-    def update_graphics(self, *args):
-        self._bg.pos = self.pos
-        self._bg.size = self.size
-        self._border.rounded_rectangle = (self.x, self.y, self.width, self.height, 24)
+    def scroll_content(self):
+        scroll = ScrollView(do_scroll_x=False, bar_width=dp(4))
+        content = column(spacing=16)
+        scroll.add_widget(content)
+        self.body.add_widget(scroll)
+        return content
 
-    def set_card(self, card):
-        self.card = card
-        if not card:
-            self.title_label.text = 'No card selected'
-            self.meta_label.text = ''
-            self.details_label.text = 'Tap a card from the stack to view it here.'
-            self.stats_label.text = ''
-            return
-        self.title_label.text = card.title
-        self.meta_label.text = f'{card.organism.type} • {card.organism.rarity} • {card.background.name}'
-        self.details_label.text = f'{card.organism.description}\n\nMoves: {", ".join(card.selected_moves)}'
-        self.stats_label.text = (
-            f'Habitat: {card.selected_details["Habitat"]}\n'
-            f'Size: {card.selected_details["Size"]}\n'
-            f'Role: {card.organism.environment_role}\n'
-            f'Notes: {card.organism.notes or "None"}'
-        )
 
-    def _close_fullscreen(self):
+class HomeScreen(Page):
+    def __init__(self):
+        super().__init__('home', 'A little closer to nature.', 'Your discoveries, all in one place.')
+        content = self.scroll_content()
+        hero = surface(column(padding=20, spacing=10), GREEN)
+        hero.add_widget(label('YOUR NATURE COMPANION', size=11, color=(.78, .86, .65, 1), bold=True))
+        hero.add_widget(label('Meet it. Hear its story.\nKeep the discovery.', size=28, color=WHITE, bold=True))
+        hero.add_widget(label('VitaDex introduces each new creature aloud, then saves a card to revisit.',
+                              size=15, color=(.85, .91, .82, 1)))
+        hero.add_widget(Action(text='Try a discovery  >', on_release=lambda *_: App.get_running_app().navigate('scan')))
+        content.add_widget(hero)
+        voice = surface(column(padding=16), PALE)
+        voice.add_widget(label('THE VITADEX VOICE', size=11, color=GREEN, bold=True))
+        self.voice_status = label(size=14, color=MUTED)
+        voice.add_widget(self.voice_status)
+        self.voice_toggle = Action(on_release=lambda *_: App.get_running_app().toggle_voice())
+        voice.add_widget(self.voice_toggle)
+        content.add_widget(voice)
+        stats = surface(column(padding=16))
+        self.stats_label = label(size=19, bold=True)
+        self.progress_label = label(size=14, color=MUTED)
+        stats.add_widget(self.stats_label)
+        stats.add_widget(self.progress_label)
+        content.add_widget(stats)
+        heading = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(12))
+        heading.add_widget(label('Recently collected', size=20, bold=True))
+        heading.add_widget(Action(text='View card book', size_hint_x=None, width=dp(142),
+                                 on_release=lambda *_: App.get_running_app().navigate('cardbook')))
+        content.add_widget(heading)
+        self.recent = column()
+        content.add_widget(self.recent)
+        content.add_widget(label('Find sources and content status in every card. Your collection stays on this device.',
+                                 size=12, color=MUTED))
+
+    def refresh(self):
         app = App.get_running_app()
-        if hasattr(app, 'fullscreen_popup') and app.fullscreen_popup:
-            app.fullscreen_popup.dismiss()
-            app.fullscreen_popup = None
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            self.touch_start_pos = touch.pos
-            return super().on_touch_down(touch)
-        return super().on_touch_down(touch)
-
-    def on_touch_up(self, touch):
-        if self.collide_point(*touch.pos):
-            # Check for swipe (>60px movement)
-            if hasattr(self, 'touch_start_pos'):
-                dx = touch.x - self.touch_start_pos[0]
-                dy = touch.y - self.touch_start_pos[1]
-                distance = (dx**2 + dy**2) ** 0.5
-                if distance > 60:
-                    self._close_fullscreen()
-                    return True
-        return super().on_touch_up(touch)
-
-    def on_release(self):
-        if self.card:
-            current_time = time.time()
-            if current_time - self.last_touch_time < self.double_tap_threshold:
-                # Double tap - close fullscreen
-                self._close_fullscreen()
-            else:
-                # Single tap - open fullscreen
-                if self.on_tap:
-                    self.on_tap(self.card)
-            self.last_touch_time = current_time
-
-
-class HomeScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(name='home', **kwargs)
-        layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=18))
-
-        layout.add_widget(Label(
-            text='VitaDex',
-            color=(1, 1, 1, 1),
-            font_size='36sp',
-            bold=True,
-            size_hint=(1, None),
-            height=60,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width - 40, None),
-        ))
-
-        layout.add_widget(build_wrapped_label(
-            'Scan creatures, collect cards, and build a nature collection that feels like a real card book.',
-            font_size='17sp',
-            height=140,
-        ))
-
-        button_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=170, spacing=12)
-        button_layout.add_widget(OutlineButton(
-            text='Start Scan',
-            size_hint=(1, None),
-            height=72,
-            on_release=self.goto_scan,
-        ))
-        self.collection_button = OutlineButton(
-            text='Card Book',
-            size_hint=(1, None),
-            height=72,
-            on_release=self.goto_card_book,
-        )
-        button_layout.add_widget(self.collection_button)
-
-        layout.add_widget(button_layout)
-
-        feature_box = BoxLayout(orientation='vertical', spacing=10)
-        feature_box.add_widget(Label(
-            text='• Easy scan flow for kids and grown-ups',
-            color=(1, 1, 1, 1),
-            font_size='16sp',
-            halign='left',
-            valign='middle',
-            size_hint_y=None,
-            height=28,
-            text_size=(Window.width - 40, None),
-        ))
-        feature_box.add_widget(Label(
-            text='• Cards appear automatically after each scan',
-            color=(1, 1, 1, 1),
-            font_size='16sp',
-            halign='left',
-            valign='middle',
-            size_hint_y=None,
-            height=28,
-            text_size=(Window.width - 40, None),
-        ))
-        feature_box.add_widget(Label(
-            text='• Black background, white text, and clear outlines for readability',
-            color=(1, 1, 1, 1),
-            font_size='16sp',
-            halign='left',
-            valign='middle',
-            size_hint_y=None,
-            height=28,
-            text_size=(Window.width - 40, None),
-        ))
-
-        for child in feature_box.children:
-            child.bind(width=lambda instance, width: setattr(instance, 'text_size', (width, None)))
-
-        layout.add_widget(feature_box)
-        self.add_widget(layout)
-        self.update_new_card_badge()
+        self.voice_toggle.text = 'Auto voice: ON' if app.voice_enabled else 'Auto voice: OFF'
+        self.voice_status.text = app.voice_status
+        unique = len(app.journal_session.by_key)
+        self.stats_label.text = f'{len(app.cards)} cards  /  {unique} creatures collected'
+        catalog_count = len({organism_key(x) for x in CARD_DB.organisms.values()}
+                            & app.journal_session.by_key.keys())
+        self.progress_label.text = f'{catalog_count} of {len(CARD_DB.organisms)} catalog creatures  •  {app.new_count} new cards'
+        last = app.cards[-1] if app.cards else None
+        recent_state = (id(last), app.is_new(last) if last else False)
+        if getattr(self, '_recent_state', None) == recent_state:
+            return
+        self._recent_state = recent_state
+        self.recent.clear_widgets()
+        if app.cards:
+            card = app.cards[-1]
+            self.recent.add_widget(CardTile(card, app.open_card, app.is_new(card),
+                                           size_hint_y=None, height=dp(290)))
+        else:
+            empty = surface(column(padding=20), PALE)
+            empty.add_widget(label('Your first chapter starts here.', size=19, bold=True))
+            empty.add_widget(label('Choose a creature in Explore to start your card book.', color=MUTED))
+            empty.add_widget(Action(text='Find your first creature', primary=True,
+                                   on_release=lambda *_: app.navigate('scan')))
+            self.recent.add_widget(empty)
 
     def update_new_card_badge(self):
+        self.refresh()
+
+
+class ScanScreen(Page):
+    def __init__(self):
+        super().__init__('scan', 'Meet the small wonders.', 'Ohio starter collection. Try an encounter and hear its story.')
+        content = self.scroll_content()
+        content.add_widget(label('SIMULATED ENCOUNTERS / REAL ORGANISMS', size=11, color=GREEN, bold=True))
+        for organism in CARD_DB.organisms.values():
+            panel = surface(column(padding=16))
+            style = CARD_DB.select_background_for(organism).style
+            panel.add_widget(CreatureArt(organism, style, size_hint_y=None, height=dp(155)))
+            panel.add_widget(label(f'{organism.type.upper()}  /  {organism.rarity.upper()}', size=11, color=GREEN, bold=True))
+            panel.add_widget(label(organism.name, size=23, bold=True))
+            panel.add_widget(label(provenance_status(organism), size=11, color=GREEN))
+            panel.add_widget(label(organism.description, size=15, color=MUTED))
+            panel.add_widget(Action(text='Discover this creature', primary=True,
+                                    on_release=lambda *_, item=organism: self.collect(item)))
+            content.add_widget(panel)
+        content.add_widget(Action(text='Surprise me', on_release=self.perform_scan))
+
+    def collect(self, organism):
+        result = IdentificationResult(
+            candidates=(IdentificationCandidate(organism, 1.0),), source='manual-demo'
+        )
+        App.get_running_app().handle_encounter(result, show_known=True)
+
+    def perform_scan(self, *_):
         app = App.get_running_app()
-        count = len(getattr(app, 'new_cards', []))
-        if count:
-            self.collection_button.text = f'Card Book  •  {count} new'
-        else:
-            self.collection_button.text = 'Card Book'
-
-    def goto_scan(self, _=None):
-        self.manager.transition = SlideTransition(direction='left')
-        self.manager.current = 'scan'
-
-    def goto_card_book(self, _=None):
-        self.manager.transition = SlideTransition(direction='left')
-        self.manager.current = 'cardbook'
+        app.handle_encounter(app.identification_service.identify(), show_known=True)
 
 
-class ScanScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(name='scan', **kwargs)
-        layout = styled_layout(BoxLayout(orientation='vertical', padding=20, spacing=18))
+class CardBookScreen(Page):
+    def __init__(self):
+        super().__init__('cardbook', 'Your card book.', 'A collection of the things that caught your curiosity.')
+        self.search = TextInput(hint_text='Search name, habitat, or type...', multiline=False,
+                                size_hint_y=None, height=dp(46), font_size=dp(15),
+                                padding=(dp(12), dp(12)), background_normal='',
+                                background_active='', background_color=WHITE,
+                                foreground_color=INK, cursor_color=GREEN)
+        self.body.add_widget(self.search)
+        controls = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
+        self.type_filter = Spinner(text='All types', values=tuple(['All types'] + sorted(
+                                   {organism.type for organism in CARD_DB.organisms.values()}
+                                   | {card.organism.type for card in App.get_running_app().cards})),
+                                   background_normal='', background_color=GREEN, color=WHITE,
+                                   font_size=dp(13))
+        self.sort_control = Spinner(text='Newest first', values=('Newest first', 'Name A–Z', 'Type'),
+                                    background_normal='', background_color=GREEN, color=WHITE,
+                                    font_size=dp(13))
+        controls.add_widget(self.type_filter)
+        controls.add_widget(self.sort_control)
+        self.body.add_widget(controls)
+        status_row = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
+        self.collection_status = label(size=13, color=MUTED)
+        status_row.add_widget(self.collection_status)
+        self.mark_seen_button = Action(text='Mark all seen', size_hint_x=None, width=dp(122),
+                                       on_release=self.put_away_cards)
+        status_row.add_widget(self.mark_seen_button)
+        self.body.add_widget(status_row)
+        scroll = ScrollView(do_scroll_x=False, bar_width=dp(4))
+        self.tiles_area = GridLayout(cols=2, spacing=dp(14), size_hint_y=None,
+                                     row_default_height=dp(298), row_force_default=True)
+        self.tiles_area.bind(minimum_height=self.tiles_area.setter('height'), width=self.resize_grid)
+        scroll.add_widget(self.tiles_area)
+        self.body.add_widget(scroll)
+        self.page = 0
+        self.page_size = 12
+        self._render_state = None
+        self.search_trigger = Clock.create_trigger(self.refresh_cards, .15)
+        self.search.bind(text=lambda *_: self.search_trigger())
+        self.type_filter.bind(text=self.refresh_cards)
+        self.sort_control.bind(text=self.refresh_cards)
+        pager = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
+        self.previous_page = Action(text='Previous', on_release=lambda *_: self.change_page(-1))
+        self.page_status = label(size=12, color=MUTED)
+        self.next_page = Action(text='Next', on_release=lambda *_: self.change_page(1))
+        for widget in (self.previous_page, self.page_status, self.next_page):
+            pager.add_widget(widget)
+        self.body.add_widget(pager)
 
-        layout.add_widget(Label(
-            text='Scan',
-            color=(1, 1, 1, 1),
-            font_size='28sp',
-            size_hint=(1, None),
-            height=50,
-            halign='left',
-            valign='middle',
-            text_size=(Window.width - 40, None),
-        ))
+    @property
+    def cards(self):
+        return App.get_running_app().cards
 
-        layout.add_widget(build_wrapped_label(
-            'Scan creatures and let VitaDex create the card for your collection. ' 
-            'When the scan completes, you return to the main page with a new-card alert.',
-            font_size='17sp',
-            height=160,
-        ))
+    def resize_grid(self, _, width):
+        self.tiles_area.cols = max(1, int(width / dp(240)))
 
-        layout.add_widget(OutlineButton(
-            text='Scan Now',
-            size_hint=(1, None),
-            height=68,
-            on_release=self.perform_scan,
-        ))
-        layout.add_widget(OutlineButton(
-            text='Back to Home',
-            size_hint=(1, None),
-            height=68,
-            on_release=self.goto_home,
-        ))
-        self.add_widget(layout)
-
-    def perform_scan(self, _=None):
-        app = App.get_running_app()
-        result = app.identification_service.identify()
-        candidate = result.top_candidate
-        if not result.has_confident_match:
-            self.show_no_match(result)
-            return
-
-        assert candidate is not None
-        organism = candidate.organism
-        card = CARD_DB.build_card(organism)
-        app.cards.append(card)
-        app.new_cards.append(card)
-        app.save_journal()
-        app.card_book_screen.add_card(card)
-        self.show_scan_animation(card)
-
-    def show_no_match(self, result: IdentificationResult):
-        message = 'VitaDex could not find a match for this encounter.'
-        if result.top_candidate is not None:
-            message = 'VitaDex is not confident enough to identify this encounter.'
-
-        Popup(
-            title='Keep observing',
-            content=Label(
-                text=(
-                    f'{message} {result.safety_message}'
-                ),
-                halign='center',
-                valign='middle',
-                text_size=(Window.width * 0.75, None),
-            ),
-            size_hint=(0.8, None),
-            height=260,
-        ).open()
-
-    def show_scan_animation(self, card):
-        preview = FloatLayout(size_hint=(0.9, None), height=220, pos_hint={'center_x': 0.5, 'center_y': 0.55}, opacity=0)
-        card_box = BoxLayout(orientation='vertical', padding=18, spacing=10, size_hint=(1, 1))
-        with card_box.canvas.before:
-            Color(0.08, 0.12, 0.2, 0.96)
-            RoundedRectangle(pos=card_box.pos, size=card_box.size, radius=[24])
-            Color(0.4, 0.75, 1, 0.12)
-            Line(rounded_rectangle=(card_box.x, card_box.y, card_box.width, card_box.height, 24), width=2)
-
-        def update_box(_, __):
-            card_box.canvas.before.clear()
-            with card_box.canvas.before:
-                Color(0.08, 0.12, 0.2, 0.96)
-                RoundedRectangle(pos=card_box.pos, size=card_box.size, radius=[24])
-                Color(0.4, 0.75, 1, 0.12)
-                Line(rounded_rectangle=(card_box.x, card_box.y, card_box.width, card_box.height, 24), width=2)
-
-        card_box.bind(pos=update_box, size=update_box)
-
-        card_box.add_widget(Label(
-            text='New card created!',
-            color=(1, 1, 1, 1),
-            font_size='22sp',
-            size_hint=(1, None),
-            height=30,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text=card.background.preview,
-            color=(1, 1, 1, 1),
-            font_size='48sp',
-            size_hint=(1, None),
-            height=90,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text=card.title,
-            color=(1, 1, 1, 1),
-            font_size='24sp',
-            bold=True,
-            size_hint=(1, None),
-            height=34,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text=f'{card.organism.type} • {card.organism.rarity} • {card.background.name}',
-            color=(0.7, 0.85, 1, 1),
-            font_size='16sp',
-            size_hint=(1, None),
-            height=26,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-        card_box.add_widget(Label(
-            text='Tap anywhere to add this card to your collection',
-            color=(0.8, 0.9, 1, 1),
-            font_size='14sp',
-            size_hint=(1, None),
-            height=28,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width * 0.8 - 40, None),
-        ))
-
-        preview.add_widget(card_box)
-        dismiss_area = Button(
-            background_normal='',
-            background_color=(0, 0, 0, 0),
-            size_hint=(1, 1),
-            on_release=lambda *_: self.dismiss_scan_preview(preview),
-        )
-        preview.add_widget(dismiss_area)
-        self.add_widget(preview)
-
-        Animation(opacity=1, d=0.35).start(preview)
-
-    def dismiss_scan_preview(self, preview):
-        def on_shrink_complete(*args):
-            self.remove_widget(preview)
-            app = App.get_running_app()
-            app.home_screen.update_new_card_badge()
-            app.home_screen.collection_button.flash()
-            self.manager.transition = SlideTransition(direction='right')
-            self.manager.current = 'home'
-
-        shrink_anim = Animation(pos=(Window.width * 0.15, 32), size=(70, 40), opacity=0, d=0.35)
-        shrink_anim.bind(on_complete=on_shrink_complete)
-        shrink_anim.start(preview)
-
-    def goto_home(self, _=None):
-        self.manager.transition = SlideTransition(direction='right')
-        self.manager.current = 'home'
-
-
-class CardBookScreen(Screen):
-    cards = ListProperty([])
-
-    def __init__(self, **kwargs):
-        super().__init__(name='cardbook', **kwargs)
-        root = styled_layout(BoxLayout(orientation='vertical', padding=16, spacing=12))
-
-        header = BoxLayout(size_hint=(1, None), height=54, spacing=10)
-        header.add_widget(OutlineButton(
-            text='‹  Home',
-            font_size='16sp',
-            size_hint=(None, 1),
-            width=110,
-            on_release=self.goto_home,
-        ))
-        header.add_widget(Label(
-            text='My Card Book',
-            color=(1, 1, 1, 1),
-            font_size='25sp',
-            bold=True,
-            halign='center',
-            valign='middle',
-            text_size=(Window.width - 160, None),
-        ))
-        root.add_widget(header)
-
-        self.collection_status = Label(
-            color=(0.72, 0.85, 1, 1),
-            font_size='15sp',
-            size_hint=(1, None),
-            height=24,
-            halign='left',
-            valign='middle',
-        )
-        root.add_widget(self.collection_status)
-
-        controls = BoxLayout(size_hint=(1, None), height=50, spacing=10)
-        controls.add_widget(OutlineButton(
-            text='Sort A–Z',
-            on_release=self.sort_by_name,
-        ))
-        controls.add_widget(OutlineButton(
-            text='Sort by type',
-            on_release=self.sort_by_type,
-        ))
-        self.mark_seen_button = OutlineButton(
-            text='Mark new as seen',
-            on_release=self.put_away_cards,
-        )
-        controls.add_widget(self.mark_seen_button)
-        root.add_widget(controls)
-
-        self.tiles_area = GridLayout(
-            cols=2,
-            spacing=12,
-            padding=(2, 6),
-            size_hint=(1, None),
-            row_default_height=188,
-            row_force_default=True,
-        )
-        self.tiles_area.bind(minimum_height=self.tiles_area.setter('height'))
-        tiles_scroll = ScrollView(size_hint=(1, 1), bar_width=8)
-        tiles_scroll.add_widget(self.tiles_area)
-        root.add_widget(tiles_scroll)
-
-        self.add_widget(root)
-
-    def add_card(self, card):
-        self.cards.append(card)
+    def change_page(self, direction):
+        self.page += direction
         self.refresh_cards()
+
+    def on_pre_enter(self, *_):
+        self.refresh_cards()
+
+    def refresh_cards(self, *_):
+        app = App.get_running_app()
+        if not self.manager or self.manager.current != 'cardbook':
+            return
+        state = (app.journal_session.revision, self.search.text, self.type_filter.text,
+                 self.sort_control.text, self.page)
+        if self._render_state == state:
+            return
+        if self._render_state and self._render_state[1:4] != state[1:4]:
+            self.page = 0
+        self.tiles_area.clear_widgets()
+        query = self.search.text.strip().casefold()
+        cards = [card for card in self.cards if
+                 (self.type_filter.text == 'All types' or card.organism.type == self.type_filter.text)
+                 and query in ' '.join((card.title, card.organism.type, card.organism.habitat,
+                                       card.organism.rarity)).casefold()]
+        if self.sort_control.text == 'Name A–Z':
+            cards.sort(key=lambda card: card.title.casefold())
+        elif self.sort_control.text == 'Type':
+            cards.sort(key=lambda card: (card.organism.type, card.title))
+        else:
+            cards.reverse()
+        self.visible_cards = cards
+        self.collection_status.text = f'{len(cards)} of {len(self.cards)} cards  •  {app.new_count} new'
+        self.mark_seen_button.disabled = not app.new_count
+        if not cards:
+            empty = surface(column(padding=20), PALE)
+            empty.add_widget(label('No matches yet.' if self.cards else 'A fresh page.', size=22, bold=True))
+            empty.add_widget(label('Try another search or clear your filters.' if self.cards
+                                    else 'Explore the catalog to collect your first card.', color=MUTED))
+            empty.add_widget(Action(text='Clear filters' if self.cards else 'Explore creatures',
+                                    on_release=self.reset_or_explore))
+            self.tiles_area.add_widget(empty)
+        pages = max(1, math.ceil(len(cards) / self.page_size))
+        self.page = max(0, min(self.page, pages - 1))
+        self.page_status.text = f'{self.page + 1} / {pages}'
+        self.previous_page.disabled = self.page == 0
+        self.next_page.disabled = self.page == pages - 1
+        self._render_state = (app.journal_session.revision, self.search.text, self.type_filter.text,
+                              self.sort_control.text, self.page)
+        for card in cards[self.page * self.page_size:(self.page + 1) * self.page_size]:
+            self.tiles_area.add_widget(CardTile(card, app.open_card, app.is_new(card)))
+
+    def reset_or_explore(self, *_):
+        if self.cards:
+            self.search.text, self.type_filter.text = '', 'All types'
+        else:
+            App.get_running_app().navigate('scan')
+
+    def put_away_cards(self, *_):
+        app = App.get_running_app()
+        try:
+            app.journal_session.mark_seen()
+        except JournalError as error:
+            app.show_storage_error(str(error))
+            return
+        app.refresh()
 
     def open_fullscreen_card(self, card):
-        content = BoxLayout(orientation='vertical', padding=20, spacing=14)
-        detail = CardDetailView(size_hint=(1, 1))
-        detail.set_card(card)
-        content.add_widget(detail)
-        popup = Popup(title=card.title, content=content, size_hint=(0.96, 0.96), auto_dismiss=True)
-        popup.open()
-        app = App.get_running_app()
-        app.fullscreen_popup = popup
-
-    def refresh_cards(self):
-        app = App.get_running_app()
-        self.tiles_area.clear_widgets()
-        new_count = len(app.new_cards)
-        self.collection_status.text = f'{len(self.cards)} discoveries'
-        if new_count:
-            self.collection_status.text += f'  •  {new_count} new'
-        self.mark_seen_button.disabled = not new_count
-
-        if not self.cards:
-            self.tiles_area.add_widget(Label(
-                text='No discoveries yet. Start a scan to add your first card.',
-                color=(1, 1, 1, 1),
-                font_size='16sp',
-                halign='center',
-                valign='middle',
-                size_hint=(1, None),
-                height=200,
-                text_size=(Window.width - 40, None),
-            ))
-            return
-
-        for card in self.cards:
-            self.tiles_area.add_widget(CardTile(card, on_open=self.open_fullscreen_card))
-
-    def on_enter(self, *args):
-        self.refresh_cards()
-
-    def put_away_cards(self, _=None):
-        app = App.get_running_app()
-        app.new_cards.clear()
-        self.refresh_cards()
-        app.home_screen.update_new_card_badge()
-
-    def sort_by_name(self, _=None):
-        self.cards.sort(key=lambda card: card.organism.name)
-        self.refresh_cards()
-
-    def sort_by_type(self, _=None):
-        self.cards.sort(key=lambda card: (card.organism.type, card.organism.name))
-        self.refresh_cards()
-
-    def goto_home(self, _=None):
-        self.manager.transition = SlideTransition(direction='right')
-        self.manager.current = 'home'
+        App.get_running_app().open_card(card)
 
 
 class VitaDexApp(App):
+    title = 'VitaDex · Field journal'
+
+    @property
+    def cards(self):
+        return self.journal_session.cards
+
+    @property
+    def new_cards(self):
+        return self.journal_session.new_cards
+
+    @property
+    def new_count(self):
+        return self.journal_session.new_count
+
+    def is_new(self, card):
+        return self.journal_session.is_new(card)
+
     def build(self):
-        # Disable Kivy Inspector (prevents red dots on right-click)
-        from kivy.core.window import Window
+        self.foreground = True
+        Window.clearcolor = PAPER
         Window.bind(on_keyboard=self._on_keyboard)
-        
-        Window.clearcolor = (0, 0, 0, 1)
-        self.journal_repository = JournalRepository(
-            Path(self.user_data_dir) / 'journal.sqlite3',
-            legacy_path=Path(self.user_data_dir) / 'journal.json',
-        )
+        self.journal_repository = JournalRepository(Path(self.user_data_dir) / 'journal.sqlite3',
+                                                    Path(self.user_data_dir) / 'journal.json')
+        self.journal_session = JournalSession(self.journal_repository)
         self.identification_service = DemoIdentificationService(CARD_DB)
-        self.cards = self.load_journal()
-        self.new_cards = []
+        self.discovery_service = DiscoveryService(CARD_DB, self.journal_session)
+        self.voice_status = 'First discoveries are introduced aloud. You can replay any card.'
+        try:
+            self.voice_enabled = self.journal_repository.load_voice_enabled()
+        except JournalError:
+            self.voice_enabled = False
+            self.voice_status = 'Voice settings could not be loaded; automatic narration is off.'
+        if not hasattr(self, 'speaker'):
+            from kivy.utils import platform
+            self.speaker = LocalSpeaker(platform=platform if platform in ('android', 'ios') else None)
         self.fullscreen_popup = None
-        self.home_screen = HomeScreen()
-        self.scan_screen = ScanScreen()
-        self.card_book_screen = CardBookScreen()
+        root = surface(BoxLayout(orientation='vertical'), PAPER, radius=0)
+        header = surface(BoxLayout(padding=(dp(20), dp(10)), spacing=dp(12),
+                                    size_hint_y=None, height=dp(66)), WHITE, radius=0)
+        header.add_widget(label('VitaDex', size=25, color=GREEN, bold=True))
+        header.add_widget(label('FIELD NOTES & SMALL WONDERS', size=10, color=MUTED))
+        root.add_widget(header)
+        self.manager = ScreenManager(transition=NoTransition())
+        self.home_screen, self.scan_screen, self.card_book_screen = HomeScreen(), ScanScreen(), CardBookScreen()
+        for screen in (self.home_screen, self.scan_screen, self.card_book_screen):
+            self.manager.add_widget(screen)
+        root.add_widget(self.manager)
+        nav = surface(BoxLayout(padding=dp(10), spacing=dp(8), size_hint_y=None, height=dp(66)), WHITE, radius=0)
+        self.nav_buttons = {}
+        for name, title in [('home', 'Journal'), ('scan', 'Discover'), ('cardbook', 'Card book')]:
+            button = Action(text=title, on_release=lambda *_, target=name: self.navigate(target))
+            nav.add_widget(button)
+            self.nav_buttons[name] = button
+        root.add_widget(nav)
+        self.navigate('home')
+        if self.journal_session.load_error:
+            Clock.schedule_once(lambda _: self.show_storage_error(str(self.journal_session.load_error)), 0)
+        return root
 
-        for card in self.cards:
-            self.card_book_screen.add_card(card)
+    def navigate(self, name):
+        self.manager.current = name
+        for key, button in self.nav_buttons.items():
+            button.primary = key == name
+            button.color = WHITE if key == name else GREEN
+            button.redraw()
+        self.refresh()
 
-        manager = ScreenManager()
-        manager.add_widget(self.home_screen)
-        manager.add_widget(self.scan_screen)
-        manager.add_widget(self.card_book_screen)
-        return manager
+    def refresh(self):
+        self.home_screen.refresh()
+        self.card_book_screen.refresh_cards()
 
-    def load_journal(self):
+    def handle_encounter(self, result, show_known=False):
+        if not self.foreground:
+            return
+        from threading import current_thread, main_thread
+        if current_thread() is not main_thread():
+            Clock.schedule_once(lambda _: self.handle_encounter(result, show_known), 0)
+            return
         try:
-            return self.journal_repository.load_cards()
+            discovery = self.discovery_service.encounter(result)
         except JournalError as error:
-            Logger.error(f'VitaDex: {error}')
-            return []
+            self.show_storage_error(str(error))
+            return
+        except ValueError as error:
+            self.message('Sources need review', str(error))
+            return
+        if discovery is None:
+            if show_known:
+                self.message('Keep observing', result.safety_message)
+            return
+        if discovery.is_first:
+            self.refresh()
+            self.open_card(discovery.card, saved=True)
+            if self.voice_enabled:
+                self.read_card(discovery.card)
+        elif show_known:
+            self.open_card(discovery.card)
+        return discovery
 
-    def save_journal(self):
+    def read_card(self, card):
+        if not self.foreground:
+            return
+        key = organism_key(card.organism)
+        uid = uuid4().hex
+        self.latest_utterance = uid
+        target = self.card_voice_status if getattr(self, 'open_card_key', None) == key else None
+        def event(event):
+            def update(_):
+                text = {'requested': 'Introduction queued.', 'started': 'Playing introduction.',
+                        'completed': 'Introduction finished.', 'cancelled': 'Introduction stopped.',
+                        'failed': 'Voice unavailable: ' + event.message}.get(event.state, event.state)
+                if self.latest_utterance == event.utterance_id:
+                    self.voice_status = text
+                    self.home_screen.refresh()
+                if (target is not None and target is getattr(self, 'card_voice_status', None)
+                        and self.latest_utterance == event.utterance_id):
+                    target.text = text
+            Clock.schedule_once(update, 0)
         try:
-            self.journal_repository.save_cards(self.cards)
+            self.speaker.speak(introduction(card), card_id=key, utterance_id=uid, on_event=event)
+        except Exception as error:
+            from narration import SpeechEvent
+            event(SpeechEvent(uid, key, 'failed', str(error)))
+
+    def toggle_voice(self):
+        if self.journal_session.load_error:
+            self.show_storage_error(str(self.journal_session.load_error))
+            return
+        enabled = not self.voice_enabled
+        try:
+            self.journal_repository.save_setting('voice_enabled', int(enabled))
         except JournalError as error:
-            Logger.error(f'VitaDex: {error}')
-    
-    def _on_keyboard(self, window, key, scancode, codepoint, modifier):
-        # Block F1 which opens the inspector and Ctrl+E
-        if key == 282:  # F1
-            return True
-        if key == 101 and 'ctrl' in modifier:  # Ctrl+E
+            self.show_storage_error(str(error))
+            return
+        self.voice_enabled = enabled
+        if not enabled:
+            self.speaker.stop()
+        self.voice_status = ('First discoveries are introduced aloud.' if enabled else
+                             'Automatic voice is off. Read aloud is still available in each card.')
+        self.refresh()
+
+    def on_stop(self):
+        self.foreground = False
+        if hasattr(self, 'speaker'):
+            self.speaker.close()
+
+    def on_pause(self):
+        self.foreground = False
+        self.speaker.pause()
+        return True
+
+    def on_resume(self):
+        self.speaker.resume()
+        self.foreground = True
+
+    def open_card(self, card, saved=False):
+        self.open_card_key = organism_key(card.organism)
+        content = BoxLayout(orientation='vertical', spacing=dp(12), padding=dp(8))
+        scroll = ScrollView(do_scroll_x=False)
+        detail = column(spacing=14, padding=12)
+        detail.add_widget(CreatureArt(card.organism, card.background.style,
+                                      size_hint_y=None, height=dp(210)))
+        detail.add_widget(label(f'{card.organism.type.upper()}  /  {card.organism.rarity.upper()}',
+                                size=12, color=GREEN, bold=True))
+        detail.add_widget(label(card.title, size=28, bold=True))
+        if saved:
+            detail.add_widget(label('FIRST DISCOVERY', size=12, color=GREEN, bold=True))
+        self.card_voice_status = label(
+            'Read the introduction or listen with your system voice.', size=13, color=MUTED)
+        detail.add_widget(self.card_voice_status)
+        detail.add_widget(Action(text='Read aloud / replay introduction',
+                                 on_release=lambda *_: self.read_card(card)))
+        detail.add_widget(Action(text='Stop reading', on_release=lambda *_: self.speaker.stop()))
+        detail.add_widget(label(provenance_status(card.organism), size=12, color=GREEN, bold=True))
+        detail.add_widget(label('Stylized illustration; not an identification photograph.', size=12, color=MUTED))
+        detail.add_widget(label(card.organism.description + claim_sources(card.organism, 'description'), size=16))
+        for heading, text, field in [
+            ('HABITAT', card.selected_details['Habitat'],
+             'habitat_type' if card.organism.habitat_type else 'habitat'),
+            ('SIZE', card.selected_details['Size'], 'physical_dimensions'),
+            ('IN OUR WORLD', card.organism.environment_role, 'environment_role'),
+            ('COLLECTION RARITY / GAME MECHANIC', card.organism.rarity, None),
+            ('MOVES / GAME MECHANIC', '  •  '.join(card.selected_moves) or 'None yet', None),
+            ('FIELD NOTES', card.organism.notes or 'No notes yet.', 'notes'),
+            ('CARD EDITION / GAME MECHANIC', card.background.name, None),
+        ]:
+            if heading.startswith('MOVES') and not card.selected_moves:
+                continue
+            if heading == 'SIZE' and not card.organism.physical_dimensions:
+                continue
+            detail.add_widget(label(heading, size=11, color=GREEN, bold=True))
+            detail.add_widget(label(text + (claim_sources(card.organism, field) if field else ''),
+                                    size=15, color=MUTED))
+        detail.add_widget(label('SOURCES & INFORMATION', size=13, color=GREEN, bold=True))
+        if card.organism.content_kind == 'fictional':
+            detail.add_widget(label(
+                'Original VitaDex fiction. Descriptions, sizes, and roles are invented for the demo; '
+                'they are not verified wildlife facts. Rarity and moves are game mechanics.',
+                size=14, color=MUTED))
+        elif card.organism.content_kind == 'unreviewed':
+            detail.add_widget(label(
+                'This saved card predates source review or has not been reviewed. '
+                'Its factual claims are not verified.', size=14, color=MUTED))
+        else:
+            detail.add_widget(label(card.organism.scientific_name, size=17, bold=True))
+            detail.add_widget(label(
+                f'Content review: {card.organism.reviewed_by} · {card.organism.reviewed_on}',
+                size=13, color=MUTED))
+        if card.organism.content_kind == 'source_checked':
+            detail.add_widget(label(
+                'Facts compared against the references by an AI assistant. '
+                'Independent human review is still pending.', size=13, color=MUTED))
+        for source in card.organism.sources:
+            detail.add_widget(label(f"[{source['id']}] {source['title']}", size=16, bold=True))
+            detail.add_widget(label(
+                f"{source['publisher']} · Accessed {source['accessed_on']}\n"
+                f"Supports: {', '.join(source['supports'])}\n"
+                f"License: {source['license']}\n{source['attribution']}", size=13, color=MUTED))
+            if source.get('evidence'):
+                evidence = source['evidence']
+                detail.add_widget(label(
+                    f"Source excerpt: {evidence['excerpt']}\nWhere: {evidence['location']}",
+                    size=13, color=MUTED))
+            detail.add_widget(label(source.get('revision_url') or source['url'], size=12, color=MUTED))
+            detail.add_widget(Action(text='Open reference in browser', on_release=
+                lambda *_, url=source.get('revision_url') or source['url']: webbrowser.open(url)))
+        detail.add_widget(label('Sources document factual content; they do not verify an encounter identification.',
+                                size=12, color=MUTED))
+        scroll.add_widget(detail)
+        content.add_widget(scroll)
+        controls = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
+        close = Action(text='Keep exploring' if saved else 'Close', primary=True)
+        controls.add_widget(close)
+        if saved:
+            view = Action(text='View card book')
+            controls.add_widget(view)
+        content.add_widget(controls)
+        popup = Popup(title='New discovery · Card saved' if saved else 'Creature card', content=content,
+                      size_hint=(.94, .92), background='', background_color=PAPER,
+                      title_color=GREEN, separator_color=BORDER)
+        close.bind(on_release=popup.dismiss)
+        if saved:
+            view.bind(on_release=lambda *_: (popup.dismiss(), self.navigate('cardbook')))
+        popup.bind(on_dismiss=lambda *_: setattr(self, 'fullscreen_popup', None))
+        self.fullscreen_popup = popup
+        popup.open()
+
+    def message(self, title, text):
+        content = BoxLayout(orientation='vertical', padding=dp(12), spacing=dp(12))
+        scroll = ScrollView(do_scroll_x=False)
+        body = column()
+        body.add_widget(label(text, size=15))
+        scroll.add_widget(body)
+        content.add_widget(scroll)
+        close = Action(text='Close', primary=True)
+        content.add_widget(close)
+        popup = Popup(title=title, content=content, size_hint=(.94, .7),
+                      background='', background_color=PAPER, title_color=GREEN,
+                      separator_color=BORDER)
+        close.bind(on_release=popup.dismiss)
+        popup.open()
+
+    def show_storage_error(self, text):
+        self.message('Journal storage problem', 'Your collection was not changed. ' + text)
+
+    def _on_keyboard(self, window, key, *args):
+        if key == 27:
+            if self.fullscreen_popup:
+                self.fullscreen_popup.dismiss()
+            else:
+                self.navigate('home')
             return True
         return False
 

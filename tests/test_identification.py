@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from database import CARD_DB
+from database import DEMO_DB as CARD_DB
 from identification import (
     DEFAULT_SAFETY_MESSAGE,
     DemoIdentificationService,

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import sys
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -43,6 +44,12 @@ def main():
 
     data = download_json(args.url)
     validate_against_schema(data, schema_path)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from database import CardDatabase
+    try:
+        CardDatabase.validate_data(data)
+    except (ValueError, TypeError) as error:
+        raise SystemExit(f'Catalog integrity validation failed: {error}') from error
 
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)

@@ -11,7 +11,7 @@ REPOSITORY_ROOT = Path(__file__).parents[1]
 
 def test_checked_in_catalog_loads_and_can_build_cards():
     assert len(CARD_DB.backgrounds) == 3
-    assert len(CARD_DB.organisms) == 3
+    assert set(CARD_DB.organisms) == {'Dog', 'Cat', 'Red Maple', 'Kentucky Bluegrass', 'American Robin'}
 
     for organism in CARD_DB.organisms.values():
         card = CARD_DB.build_card(organism)
@@ -60,3 +60,26 @@ def test_catalog_conforms_to_its_json_schema():
 def test_invalid_catalogs_are_rejected(data, message):
     with pytest.raises(ValueError, match=message):
         CardDatabase.from_json(data)
+
+
+def test_ohio_starter_has_cited_short_introductions_and_no_fantasy_moves():
+    from discovery import introduction
+    from provenance import validate_provenance
+    from dataclasses import asdict
+
+    for organism in CARD_DB.organisms.values():
+        assert organism.content_kind == 'source_checked'
+        assert 'human review pending' in organism.reviewed_by
+        assert 15 <= len(organism.description.split()) <= 45
+        assert not organism.move_set
+        assert organism.sources
+        assert all(source.get('evidence') for source in organism.sources)
+        validate_provenance(asdict(organism))
+        narration = introduction(CARD_DB.build_card(organism))
+        assert narration == f'{organism.name}. {organism.description}'
+        assert 'Fictional' not in narration
+
+
+def test_missing_catalog_does_not_silently_substitute_fiction(tmp_path):
+    with pytest.raises(FileNotFoundError, match='Catalog not found'):
+        CardDatabase.load_default(tmp_path / 'missing.json')

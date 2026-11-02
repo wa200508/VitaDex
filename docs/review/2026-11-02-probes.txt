@@ -1,0 +1,5 @@
+alias_probe: True True cards= 2
+concurrency_probe: first_results= 2 memory_cards= 2
+interrupted_migration_probe: legacy_cards=1, loaded= 0
+catalog_type_probe: accepted_description_type= int
+claim_consistency_probe: accepted_inconsistent_habitat= Invented habitat unrelated to cited source

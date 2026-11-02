@@ -13,14 +13,34 @@
       "description": "Available card background templates.",
       "items": {
         "type": "object",
-        "required": ["id", "name", "style", "preview"],
+        "required": [
+          "id",
+          "name",
+          "style",
+          "preview"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "style": { "type": "string" },
-          "preview": { "type": "string" },
-          "tags": { "type": "array", "items": { "type": "string" } },
-          "description": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "style": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
         }
       }
     },
@@ -38,20 +58,202 @@
           "rarity"
         ],
         "properties": {
-          "name": { "type": "string" },
-          "type": { "type": "string" },
-          "move_set": { "type": "array", "items": { "type": "string" } },
-          "description": { "type": "string" },
-          "habitat": { "type": "string" },
-          "habitat_type": { "type": "string" },
-          "environment_role": { "type": "string" },
-          "physical_dimensions": { "type": "string" },
-          "rarity": { "type": "string" },
-          "related_forms": { "type": "array", "items": { "type": "string" } },
-          "lifecycle_stage": { "type": "string" },
-          "group": { "type": "string" },
-          "notes": { "type": "string" }
-        }
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "move_set": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "habitat": {
+            "type": "string"
+          },
+          "habitat_type": {
+            "type": "string"
+          },
+          "environment_role": {
+            "type": "string"
+          },
+          "physical_dimensions": {
+            "type": "string"
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "related_forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lifecycle_stage": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "content_kind": {
+            "enum": [
+              "fictional",
+              "unreviewed",
+              "source_checked",
+              "reviewed"
+            ]
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "reviewed_by": {
+            "type": "string"
+          },
+          "reviewed_on": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "publisher",
+                "url",
+                "accessed_on",
+                "supports",
+                "license",
+                "attribution"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "publisher": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "url": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "accessed_on": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "license": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "attribution": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "revision_url": {
+                  "type": "string"
+                },
+                "supports": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "enum": [
+                      "scientific_name",
+                      "name",
+                      "type",
+                      "description",
+                      "habitat",
+                      "habitat_type",
+                      "environment_role",
+                      "physical_dimensions",
+                      "related_forms",
+                      "lifecycle_stage",
+                      "group",
+                      "notes"
+                    ]
+                  }
+                },
+                "evidence": {
+                  "type": "object",
+                  "required": [
+                    "location",
+                    "excerpt",
+                    "sha256"
+                  ],
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "excerpt": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "organism_id": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "content_kind"
+              ],
+              "properties": {
+                "content_kind": {
+                  "enum": [
+                    "source_checked",
+                    "reviewed"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "scientific_name",
+                "reviewed_by",
+                "reviewed_on",
+                "sources"
+              ],
+              "properties": {
+                "sources": {
+                  "minItems": 1
+                },
+                "scientific_name": {
+                  "minLength": 1
+                },
+                "reviewed_by": {
+                  "minLength": 1
+                },
+                "reviewed_on": {
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "art_assets": {
@@ -59,11 +261,24 @@
       "description": "Art prompts and image references associated with organisms.",
       "items": {
         "type": "object",
-        "required": ["organism_name", "prompt", "assets"],
+        "required": [
+          "organism_name",
+          "prompt",
+          "assets"
+        ],
         "properties": {
-          "organism_name": { "type": "string" },
-          "prompt": { "type": "string" },
-          "assets": { "type": "array", "items": { "type": "string" } }
+          "organism_name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     }

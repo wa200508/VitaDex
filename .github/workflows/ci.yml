@@ -34,7 +34,7 @@ jobs:
         run: python -m ruff check .
 
       - name: Compile Python sources
-        run: python -m py_compile main.py database.py identification.py journal.py download_models.py scripts/sync_card_db.py
+        run: python -m py_compile main.py database.py identification.py journal.py discovery.py identity.py validation.py narration.py native_speech.py provenance.py download_models.py scripts/sync_card_db.py
 
       - name: Run tests
         run: python -m pytest
