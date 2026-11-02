@@ -180,6 +180,16 @@ def explore():
 def finish_checks(old_label, new_label):
     assert new_label is not old_label and 'Old error' not in new_label.text
     app.fullscreen_popup.dismiss(animation=False)
+    from dataclasses import replace
+    original = app.cards[0]
+    current = replace(original.organism, description=original.organism.description + ' Updated test edition.')
+    count_before, speech_before = len(app.cards), len(app.speaker.messages)
+    preview = app.preview_update(original, current)
+    confirm = next(widget for widget in preview.content.children if getattr(widget, 'text', '') == 'Update saved facts')
+    confirm.dispatch('on_release')
+    assert len(app.cards) == count_before and len(app.speaker.messages) == speech_before
+    assert app.cards[0].organism.description == current.description
+    app.fullscreen_popup.dismiss(animation=False)
     app.on_pause()
     from identification import IdentificationResult
     assert app.handle_encounter(IdentificationResult((), source='background')) is None

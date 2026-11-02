@@ -11,7 +11,7 @@ from identity import organism_key
 FIELDS = ('description', 'habitat', 'environment_role', 'physical_dimensions', 'notes')
 STOP = set('a an the what where when why how do does is are can could would should '
            'this that these those it its of in on at to for and or with about tell me '
-           'please animal organism live lives living'.split())
+           'please animal organism live lives living many much will my your our their'.split())
 
 
 def tokens(text):
@@ -81,7 +81,7 @@ class Corpus:
         for passage in candidates:
             words = tokens(passage['text'])
             overlap = query & words
-            if overlap:
+            if overlap and len(overlap) / len(query) >= .5:
                 score = len(overlap) / math.sqrt(max(1, len(words)))
                 scored.append((score, passage))
         return [passage for score, passage in sorted(scored, key=lambda x: (-x[0], x[1]['id']))[:limit]]

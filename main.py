@@ -814,6 +814,7 @@ class VitaDexApp(App):
             self.open_card(replacement)
         confirm.bind(on_release=apply)
         popup.open()
+        return popup
 
     def message(self, title, text):
         content = BoxLayout(orientation='vertical', padding=dp(12), spacing=dp(12))

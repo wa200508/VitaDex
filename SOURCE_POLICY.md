@@ -95,3 +95,8 @@ no automatic source substitution repairs them. Stable organism IDs and declared
 aliases identify discoveries separately from the original factual snapshot, so a
 taxonomic rename does not require rewriting historical sources or announcing a
 familiar species again.
+
+
+See [EDITORIAL_REVIEW.md](EDITORIAL_REVIEW.md) for executable review packets and
+explicit archived fact updates, and [CORPUS.md](CORPUS.md) for the distinction
+between editorial retrieval passages and quoted third-party source text.

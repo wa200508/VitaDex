@@ -222,3 +222,6 @@ __marimo__/
 bin/
 device-results/
 !buildozer.spec
+
+!docs/device-results/
+!docs/device-results/*.json

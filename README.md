@@ -123,6 +123,14 @@ Wikipedia is an acceptable starting point, alongside specialist sources, but its
 articles are not universally peer reviewed. Citation metadata is validated by the
 app; source accuracy and claim support require an editorial review.
 
+## Review, mobile preview, and future questions
+
+The next-five implementation adds a [version-bound editorial workflow](EDITORIAL_REVIEW.md),
+explicit archived fact updates in card details, an [offline editorial corpus](CORPUS.md),
+and [Android build/device-test tooling](MOBILE_PREVIEW.md). Human sign-off and real
+phone audio/energy measurements are still pending. No chat provider or generated
+answer UI is connected yet.
+
 ## Development
 
 ```sh

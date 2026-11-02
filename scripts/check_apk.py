@@ -27,7 +27,9 @@ with ZipFile(args.apk) as apk:
                     found.update(name.lstrip('./') for name in files.getnames())
             except tarfile.TarError:
                 continue
-    required = {'data/database.json', 'data/corpus.json', 'main.py'}
+    required = {'data/database.json', 'data/corpus.json'}
+    if not ({'main.py', 'main.pyc'} & found):
+        raise SystemExit('APK is missing its Python entry point.')
     if not required <= found:
         raise SystemExit(f'APK is missing required bundled files: {sorted(required - found)}')
 print('APK checks passed: no sensing/network/wake-lock permissions; catalog and corpus bundled.')

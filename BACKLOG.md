@@ -80,6 +80,8 @@ available. Do not invent a battery target from desktop timing. Depends: VD-03/04
 
 ### VD-06 · P1 · M · Finish the Ohio starter editorial workflow
 
+**Status: workflow implemented; actual independent human sign-off remains pending.** Version-bound packets, completeness/staleness checks, separate proposed catalog output, explicit update previews, archived prior snapshots, and regression coverage. No entries have been falsely promoted to human-reviewed.
+
 Evidence: F09; `OHIO_STARTER.md` and `SOURCE_POLICY.md`.
 
 Acceptance: independent human review is recorded honestly per entry and source
@@ -90,6 +92,8 @@ offer a transparent update path. Test citation completeness and evidence integri
 Depends: VD-04; human editorial work is an external dependency, not assumed approval.
 
 ### VD-07 · P1 · M · Produce one installable mobile preview early
+
+**Status: Android build spike configured and running through CI; installation/device acceptance pending.** Pinned build inputs, offline bundled data, TTS queries, APK content/permission checks, and artifact job. Android is provisional pending phone preference. Local build lacks javac; initial remote dependency conflict was corrected. See `MOBILE_PREVIEW.md` and current build evidence in `docs/review/NEXT_FIVE.md`.
 
 Evidence: F08; currently no mobile build configuration.
 
@@ -102,6 +106,8 @@ selection; VD-08 validates the resulting build.
 
 ### VD-08 · P1 · M · Validate native speech and app lifecycle on a phone
 
+**Status: test tooling prepared; actual phone validation remains open.** Offline Android voice selection, opt-in bounded local event tracing, an unfilled acceptance template, and repeatable audio/lifecycle steps are present. No device result is marked passed.
+
 Evidence: F02/F08, `BATTERY_POLICY.md`.
 
 Acceptance: record device/OS and results for first introduction, duplicate silence,
@@ -111,6 +117,8 @@ cancellation. Add a repeatable checklist/automated coverage where feasible.
 Depends: VD-02/07.
 
 ### VD-09 · P1 · M · Establish an energy baseline and regression budgets
+
+**Status: read-only capture tooling and unfilled baseline/budget templates prepared; real measurements and numerical budgets remain open.** No energy estimate is inferred from desktop tests or raw battery percentage.
 
 Evidence: F07/F08; no battery measurements exist.
 
@@ -122,6 +130,8 @@ repeat after major changes. Later add chat/capture workloads, without claiming
 that duplicate suppression alone saves sensing energy. Depends: VD-05/07/08.
 
 ### VD-10 · P1 · L · Prepare a small permitted source-passage corpus
+
+**Status: a validated, offline editorial-summary corpus and scoped retrieval are implemented; larger licensed primary-source ingestion and human approval remain open.** Passage/source hashes, attribution, explicit reuse basis, evaluation questions, unsupported-query behavior, saved-snapshot context, and reviewed-only default retrieval are tested. Source-checked preview requires explicit opt-in; no live model/chat UI.
 
 Evidence: F09; brief verification excerpts are not a general Q&A corpus.
 

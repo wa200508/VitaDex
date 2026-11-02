@@ -23,15 +23,16 @@ is planned. Placeholder art is allowed while core features are developed.
   error messages, and responsive collection columns.
 - Source, product, battery, and art-direction requirements; an unapproved art study
   outside runtime.
-- 70 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
+- 82 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
 - The first-five follow-up implements migration recovery, stable atomic identity,
   shared fact validation, speech lifecycle code, and incremental collection work.
   Actual-device speech/energy acceptance remains open; see
   [the follow-up report](docs/review/TOP_FIVE.md).
 
 All of this includes local uncommitted work; it is not a published mobile release.
-There is no mobile build, real-device audio/energy evidence, actual identification,
-source-text retrieval, or LLM chat yet. The review found integrity gaps despite the
+An Android build spike and offline editorial retrieval corpus are implemented,
+but successful installation, actual-device audio/energy evidence, primary-source
+text ingestion, real identification, and LLM chat remain unverified or pending. The review found integrity gaps despite the
 passing suite.
 
 ## Milestones
@@ -56,6 +57,8 @@ for testing the core experience.
 - [ART_DIRECTION.md](ART_DIRECTION.md): trait-led realistic anime art, placeholders
   permitted, anatomy/rights review before final use.
 
-Next: independent content review (VD-06), a minimal phone-build spike (VD-07/08),
-and permitted source passages (VD-10). Close mobile speech and energy gates using
-device evidence, rather than marking them complete from mocked tests.
+VD-06–10 now have implementation/tooling; see [the next-five follow-up](docs/review/NEXT_FIVE.md).
+Next acceptance work is independent content review, a successful APK/install, and
+actual-device audio/energy measurements. Original editorial summaries provide a
+small retrieval corpus; primary-source expansion and provider-backed chat remain
+separate work. Do not close device gates from mocked tests.

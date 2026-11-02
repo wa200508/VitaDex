@@ -5,7 +5,7 @@ package.domain = org.vitadex
 source.dir = .
 source.include_exts = py,json,png,kv,atlas,xml
 source.exclude_dirs = tests,scripts,docs,.git,.github,.pytest_cache,.ruff_cache,.buildozer,bin
-source.exclude_patterns = data/editorial/*,data/demo_database.json
+source.exclude_patterns = data/editorial/*,data/demo_database.json,data/corpus-evaluation.json
 version = 0.2.0
 requirements = python3==3.11.14,hostpython3==3.11.14,kivy==2.3.1,sqlite3,pyjnius
 orientation = portrait

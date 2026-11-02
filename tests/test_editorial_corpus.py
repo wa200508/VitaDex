@@ -109,3 +109,43 @@ def test_diagnostics_opt_in_bounded_and_omit_text(tmp_path):
     result = json.loads((tmp_path / 'device-trace.json').read_text())
     assert len(result['events']) == 2
     assert 'not recorded' not in json.dumps(result)
+
+
+def test_bundled_retrieval_evaluation_and_references():
+    from pathlib import Path
+    corpus = Corpus.bundled()
+    examples = json.loads((Path(__file__).parents[1] / 'data/corpus-evaluation.json').read_text())
+    for case in examples['supported_preview_questions']:
+        found = corpus.retrieve(case['organism_id'], case['question'], allow_source_checked=True)
+        assert any(passage['field'] == case['field'] for passage in found), case
+        assert all(corpus.references(passage) for passage in found)
+    for case in examples['unsupported_questions']:
+        assert not corpus.retrieve(case['organism_id'], case['question'], allow_source_checked=True), case
+
+
+def test_existing_legacy_snapshot_can_be_updated_without_rewriting_history(tmp_path):
+    repo = JournalRepository(tmp_path / 'journal.sqlite3')
+    saved = CARD_DB.build_card(CARD_DB.organisms['Dog'])
+    repo.save_cards([saved])
+    with sqlite3.connect(repo.path) as db:
+        old = repo._card_to_dict(saved)
+        old['organism'].pop('organism_id')
+        db.execute('UPDATE cards SET card_json = ?', (json.dumps(old),))
+    session = JournalSession(repo)
+    original = session.cards[0]
+    replacement = CARD_DB.build_card(CARD_DB.organisms['Dog'])
+    session.update_card(original, replacement)
+    assert session.cards == [replacement]
+    with sqlite3.connect(repo.path) as db:
+        historical = json.loads(db.execute('SELECT card_json FROM card_history').fetchone()[0])
+        assert 'organism_id' not in historical['organism']
+
+
+def test_diagnostics_write_failure_does_not_break_application(tmp_path, monkeypatch):
+    import diagnostics
+    trace = DeviceTrace(tmp_path, enabled=True)
+    trace.record('app.pause')
+    def fail(*args):
+        raise OSError('Read-only storage')
+    monkeypatch.setattr(diagnostics, 'atomic_json', fail)
+    assert trace.flush() is False
