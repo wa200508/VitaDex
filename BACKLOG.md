@@ -93,7 +93,7 @@ Depends: VD-04; human editorial work is an external dependency, not assumed appr
 
 ### VD-07 · P1 · M · Produce one installable mobile preview early
 
-**Status: Android build spike configured and running through CI; installation/device acceptance pending.** Pinned build inputs, offline bundled data, TTS queries, APK content/permission checks, and artifact job. Android is provisional pending phone preference. Local build lacks javac; initial remote dependency conflict was corrected. See `MOBILE_PREVIEW.md` and current build evidence in `docs/review/NEXT_FIVE.md`.
+**Status: an Android APK was successfully built and checked at commit `8ed1a24`; installation/device acceptance remains pending.** Pinned build inputs, offline bundled data, TTS queries, APK content/permission checks, and artifact job. Android is provisional pending phone preference. Local build lacks javac; initial remote dependency conflict was corrected. See `MOBILE_PREVIEW.md` and current build evidence in `docs/review/NEXT_FIVE.md`.
 
 Evidence: F08; currently no mobile build configuration.
 
@@ -144,6 +144,8 @@ Depends: VD-04/06; rights review for any text beyond current short excerpts.
 
 ### VD-11 · P1 · L · Add the first cited “Ask VitaDex” flow
 
+**Status: first UI and constrained provider adapter implemented; live provider/device acceptance pending.** Offline evidence answers, saved-snapshot citations, explicit provisional-content opt-in, an optional HTTPS Chat Completions-compatible passage selector, session-only keys, consent per send, bounded/cancellable requests, no automatic model work, and deliberate answer speech. Output is assembled only from stored evidence, not arbitrary generated prose. No real provider credentials were used. See `ASK_VITADEX.md`.
+
 Acceptance: a selected card offers a question UI and a user-selected provider/model
 adapter. Retrieve before generating; show supporting passage citations and source
 links, and abstain when evidence is insufficient or conflicting. Test incorrect
@@ -154,6 +156,8 @@ device. No automatic chat requests on discovery. Spoken answers are deliberate.
 Depends: VD-10 and provider configuration; no invented provider credentials.
 
 ### VD-12 · P1 · M · Extend quality gates around the actual risks
+
+**Status: implemented in CI configuration and regression suite; current remote runs must still be checked.** Python 3.11/3.12/3.13 matrix, compilation of all modules, existing integrity/speech regressions, added ask/sync tests, and a headless real-Kivy job with screenshot artifacts. Mobile audio/energy gates remain distinct.
 
 Evidence: F10; current suite passes but misses review probes.
 
@@ -166,6 +170,8 @@ not an excuse to delay them.
 
 ### VD-13 · P1 · M · Make catalog sync bounded, atomic, and repairable
 
+**Status: implemented and regression-tested locally.** Side-effect-free catalog module, HTTPS/time/size bounds, schema/domain/provenance validation, fsynced temporary output and atomic replacement, retained prior bytes, and corrupt-current recovery. Corpus rebuild/publication is explicit, not an unclaimed atomic multi-file transaction. See `CATALOG_UPDATES.md`.
+
 Evidence: F11; `scripts/sync_card_db.py`.
 
 Acceptance: finite network timeouts and clear failures; validated temporary output
@@ -176,6 +182,8 @@ write, invalid download, offline timeout, and corrupt-current/valid-new recovery
 Depends: VD-04.
 
 ### VD-14 · P1 · M · Polish discovery and detail views for young learners
+
+**Status: first layout improvements implemented; child, screen-reader, large-text, safe-area, and device acceptance remain open.** Name/introduction/listen controls precede artwork, advanced provenance has a separate view, and model settings hide in offline question mode. UI regression covers sources/questions/updates; this does not establish accessibility.
 
 Evidence: current screen/detail design; six-year-old usability untested.
 

@@ -68,7 +68,8 @@ session. Resolve the storage problem and restart. If a save fails, the card is n
 added or reported as saved. New-card badges are saved locally. Existing journals created before this feature
 start with their older cards marked as seen.
 
-Mobile installation, real identification, and source-grounded chat are not implemented. Always
+An Android preview APK has been built; real identification and phone validation
+remain pending. The first cited question flow is described below. Always
 observe real wildlife from a safe distance; never use this demo to decide whether
 something is safe to touch or eat.
 
@@ -128,8 +129,11 @@ app; source accuracy and claim support require an editorial review.
 The next-five implementation adds a [version-bound editorial workflow](EDITORIAL_REVIEW.md),
 explicit archived fact updates in card details, an [offline editorial corpus](CORPUS.md),
 and [Android build/device-test tooling](MOBILE_PREVIEW.md). Human sign-off and real
-phone audio/energy measurements are still pending. No chat provider or generated
-answer UI is connected yet.
+phone audio/energy measurements are still pending. A first [Ask VitaDex flow](ASK_VITADEX.md) now supports offline evidence answers
+and optional explicit model selection; live-provider/device testing remains pending.
+
+See [the learning-flow follow-up](docs/review/LEARNING_FLOW.md) for current implementation
+and device/provider verification limits.
 
 ## Development
 
@@ -151,3 +155,9 @@ if you have a compatible workflow and install `huggingface_hub` separately.
 ## License
 
 The concept and descriptive content in this README are intended to support this project and are covered by the repository license. They are not intended for reuse, redistribution, or commercial exploitation without permission.
+
+
+The [verified offline Android preview](https://github.com/wa200508/VitaDex/actions/runs/41452080846)
+at commit `8ed1a24` predates the latest Ask interface. Current builds add Internet
+permission for explicit model requests while retaining offline-by-default behavior.
+See [CATALOG_UPDATES.md](CATALOG_UPDATES.md) for atomic developer updates.

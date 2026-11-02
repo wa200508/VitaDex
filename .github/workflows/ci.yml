@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,7 +34,31 @@ jobs:
         run: python -m ruff check .
 
       - name: Compile Python sources
-        run: python -m py_compile main.py database.py identification.py journal.py discovery.py identity.py validation.py narration.py native_speech.py provenance.py download_models.py scripts/sync_card_db.py
+        run: python -m compileall -q *.py scripts tests
 
       - name: Run tests
         run: python -m pytest
+
+  interface:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install graphical test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth libgl1 libegl1 libmtdev1
+          python -m pip install -r requirements-dev.txt
+      - name: Exercise the real Kivy interface
+        env:
+          KIVY_NO_ARGS: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: xvfb-run -a python scripts/check_ui.py --screenshots /tmp/vitadex-ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interface-previews
+          path: /tmp/vitadex-ui/*.png
+          if-no-files-found: warn

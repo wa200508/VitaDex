@@ -195,7 +195,32 @@ def finish_checks(old_label, new_label):
     assert app.handle_encounter(IdentificationResult((), source='background')) is None
     app.on_resume()
     assert app.foreground
-    print('UI checks passed: discovery, filters, persistence, errors, paging, hidden-view reuse, stale speech events, lifecycle, resize.')
+    source_popup = app.open_sources(app.cards[0])
+    source_popup.dismiss(animation=False)
+    popup = app.open_question(app.cards[0])
+    def descendants(widget):
+        yield widget
+        for child in widget.children:
+            yield from descendants(child)
+    widgets = list(descendants(popup.content))
+    question = next(w for w in widgets if getattr(w, 'hint_text', '') == 'What would you like to know?')
+    question.text = 'What jobs can dogs help people with?'
+    from kivy.uix.checkbox import CheckBox
+    next(w for w in widgets if isinstance(w, CheckBox)).active = True
+    submit = next(w for w in widgets if getattr(w, 'text', '') == 'Find in offline sources')
+    before = len(app.speaker.messages)
+    submit.dispatch('on_release')
+    Clock.schedule_once(guard(lambda: question_checks(popup, widgets, before)), .4)
+
+
+def question_checks(popup, widgets, speech_before):
+    texts = [getattr(w, 'text', '') for w in widgets]
+    assert any('[dog-adw]' in text and 'jobs' in text for text in texts)
+    assert len(app.speaker.messages) == speech_before
+    app.ask_key_widget.text = 'temporary-test-value'
+    popup.dismiss(animation=False)
+    assert app.ask_cancel.is_set() and not app.ask_key_widget.text
+    print('UI checks passed: discovery, filters, persistence, errors, paging, stale events, lifecycle, fact update, sources, offline questions, key clearing, resize.')
     app.stop()
 
 

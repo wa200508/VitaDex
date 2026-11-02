@@ -48,5 +48,7 @@ It returns no factual context for fiction or unreviewed historical entries. A
 future chat UI must decide explicitly whether to answer from the saved version or
 ask the user to review an available catalog update.
 
-No provider integration, API-key storage, generated answers, or chat UI is included
-in VD-10. Those remain VD-11.
+VD-10 itself provides no provider or answer UI. The first VD-11 interface now
+uses this foundation; see [ASK_VITADEX.md](ASK_VITADEX.md). It selects/assembles
+evidence rather than displaying arbitrary generated prose. Persistent key storage
+and broader conversation are not implemented.

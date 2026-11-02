@@ -34,7 +34,7 @@ jobs:
       - name: Check APK contents and permissions
         run: |
           AAPT_PATH=$(find "$HOME/.buildozer/android/platform/android-sdk/build-tools" -type f -name aapt | sort | tail -n 1)
-          python scripts/check_apk.py bin/*.apk --aapt "$AAPT_PATH"
+          python scripts/check_apk.py bin/*.apk --aapt "$AAPT_PATH" --allow-network
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

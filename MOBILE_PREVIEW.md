@@ -30,9 +30,11 @@ adb shell monkey -p org.vitadex.vitadex 1
 ```
 
 The app bundles its catalog and editorial corpus. Build checks reject missing
-files and camera, microphone, location, Internet, or wake-lock permissions. The
+files and camera, microphone, location, or wake-lock permissions. Internet permission
+is explicitly allowed for the user-requested model feature. The
 only manifest addition is TTS service discovery, not permission to record audio.
-The current preview simulates encounters and makes no chat/network requests.
+The preview simulates encounters. Offline question mode makes no model request;
+external requests require a configured session and an explicit Send once action.
 Android narration rejects voices requiring network access or marked `notInstalled`,
 then selects an installed offline English voice or reports that no
 usable voice is installed; it does not download one automatically. Other apps or
@@ -45,11 +47,15 @@ spike and corresponding audio/device validation; an Android APK does not cover i
 
 ## Current build evidence
 
-The local build attempt stopped because `javac` is unavailable in this workspace.
-The first GitHub job reached dependency installation and found the incompatible
-Cython pin; that pin was corrected and the replacement build is being checked.
-Do not interpret the local desktop tests as an APK or a successful installation.
-Current run details are recorded in `docs/review/NEXT_FIVE.md` as they become known.
+The offline Android preview at commit `8ed1a24` successfully compiled, passed its
+APK checks, and uploaded the `vitadex-android-preview` artifact at
+[run 41452080846](https://github.com/wa200508/VitaDex/actions/runs/41452080846).
+This artifact predates the Ask interface and has no Internet permission. Current
+builds include the explicitly requested model feature and require a new artifact;
+do not treat the older preview as a test of the latest question UI.
+
+The local workspace lacks javac/adb. Successful remote packaging is not evidence
+of phone installation, audible speech, interruption handling, or battery use.
 
 ## Audio and lifecycle acceptance (VD-08)
 

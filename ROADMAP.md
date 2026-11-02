@@ -23,7 +23,7 @@ is planned. Placeholder art is allowed while core features are developed.
   error messages, and responsive collection columns.
 - Source, product, battery, and art-direction requirements; an unapproved art study
   outside runtime.
-- 83 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
+- 96 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
 - The first-five follow-up implements migration recovery, stable atomic identity,
   shared fact validation, speech lifecycle code, and incremental collection work.
   Actual-device speech/energy acceptance remains open; see
@@ -60,5 +60,6 @@ for testing the core experience.
 VD-06–10 now have implementation/tooling; see [the next-five follow-up](docs/review/NEXT_FIVE.md).
 Next acceptance work is independent content review, a successful APK/install, and
 actual-device audio/energy measurements. Original editorial summaries provide a
-small retrieval corpus; primary-source expansion and provider-backed chat remain
-separate work. Do not close device gates from mocked tests.
+small retrieval corpus; primary-source expansion and full generative conversation remain
+separate work. A first evidence-only Ask UI and optional passage-selection provider
+are now implemented; see [ASK_VITADEX.md](ASK_VITADEX.md). Do not close device gates from mocked tests.

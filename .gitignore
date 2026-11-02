@@ -225,3 +225,6 @@ device-results/
 
 !docs/device-results/
 !docs/device-results/*.json
+
+# Developer catalog-update backups
+data/*.bak*

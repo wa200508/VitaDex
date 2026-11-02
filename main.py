@@ -21,6 +21,9 @@ from kivy.uix.screenmanager import Screen, ScreenManager, NoTransition
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
+from kivy.uix.checkbox import CheckBox
+from threading import Event, Thread
+from ask import answer_card, SessionProvider, spoken_answer
 from kivy.uix.widget import Widget
 
 from database import CARD_DB
@@ -659,6 +662,10 @@ class VitaDexApp(App):
         self.refresh()
 
     def on_stop(self):
+        if getattr(self, 'ask_cancel', None):
+            self.ask_cancel.set()
+        if getattr(self, 'ask_provider', None):
+            self.ask_provider.clear()
         if hasattr(self, 'trace'):
             self.trace.record('app.stop')
         self.foreground = False
@@ -669,6 +676,12 @@ class VitaDexApp(App):
 
     def on_pause(self):
         self.foreground = False
+        if getattr(self, 'ask_cancel', None):
+            self.ask_cancel.set()
+        if getattr(self, 'ask_provider', None):
+            self.ask_provider.clear()
+        if getattr(self, 'ask_key_widget', None):
+            self.ask_key_widget.text = ''
         self.trace.record('app.pause')
         self.speaker.pause()
         self.trace.flush()
@@ -684,22 +697,21 @@ class VitaDexApp(App):
         content = BoxLayout(orientation='vertical', spacing=dp(12), padding=dp(8))
         scroll = ScrollView(do_scroll_x=False)
         detail = column(spacing=14, padding=12)
-        detail.add_widget(CreatureArt(card.organism, card.background.style,
-                                      size_hint_y=None, height=dp(210)))
-        detail.add_widget(label(f'{card.organism.type.upper()}  /  {card.organism.rarity.upper()}',
-                                size=12, color=GREEN, bold=True))
         detail.add_widget(label(card.title, size=28, bold=True))
         if saved:
             detail.add_widget(label('FIRST DISCOVERY', size=12, color=GREEN, bold=True))
-        self.card_voice_status = label(
-            'Read the introduction or listen with your system voice.', size=13, color=MUTED)
+        self.card_voice_status = label('Listen or read the introduction.', size=13, color=MUTED)
         detail.add_widget(self.card_voice_status)
-        detail.add_widget(Action(text='Read aloud / replay introduction',
-                                 on_release=lambda *_: self.read_card(card)))
-        detail.add_widget(Action(text='Stop reading', on_release=lambda *_: self.speaker.stop()))
-        detail.add_widget(label(provenance_status(card.organism), size=12, color=GREEN, bold=True))
-        detail.add_widget(label('Stylized illustration; not an identification photograph.', size=12, color=MUTED))
-        detail.add_widget(label(card.organism.description + claim_sources(card.organism, 'description'), size=16))
+        row = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
+        row.add_widget(Action(text='Read aloud', on_release=lambda *_: self.read_card(card)))
+        row.add_widget(Action(text='Stop reading', on_release=lambda *_: self.speaker.stop()))
+        detail.add_widget(row)
+        detail.add_widget(label(card.organism.description, size=17))
+        detail.add_widget(CreatureArt(card.organism, card.background.style,
+                                      size_hint_y=None, height=dp(155)))
+        detail.add_widget(label(provenance_status(card.organism), size=12, color=GREEN))
+        detail.add_widget(Action(text='Ask VitaDex about this organism', primary=True,
+                                 on_release=lambda *_: self.open_question(card)))
         for heading, text, field in [
             ('HABITAT', card.selected_details['Habitat'],
              'habitat_type' if card.organism.habitat_type else 'habitat'),
@@ -722,41 +734,8 @@ class VitaDexApp(App):
         if current is not None and asdict(current) != asdict(card.organism):
             detail.add_widget(Action(text='Review available fact update',
                                      on_release=lambda *_: self.preview_update(card, current)))
-        detail.add_widget(label('SOURCES & INFORMATION', size=13, color=GREEN, bold=True))
-        if card.organism.content_kind == 'fictional':
-            detail.add_widget(label(
-                'Original VitaDex fiction. Descriptions, sizes, and roles are invented for the demo; '
-                'they are not verified wildlife facts. Rarity and moves are game mechanics.',
-                size=14, color=MUTED))
-        elif card.organism.content_kind == 'unreviewed':
-            detail.add_widget(label(
-                'This saved card predates source review or has not been reviewed. '
-                'Its factual claims are not verified.', size=14, color=MUTED))
-        else:
-            detail.add_widget(label(card.organism.scientific_name, size=17, bold=True))
-            detail.add_widget(label(
-                f'Content review: {card.organism.reviewed_by} · {card.organism.reviewed_on}',
-                size=13, color=MUTED))
-        if card.organism.content_kind == 'source_checked':
-            detail.add_widget(label(
-                'Facts compared against the references by an AI assistant. '
-                'Independent human review is still pending.', size=13, color=MUTED))
-        for source in card.organism.sources:
-            detail.add_widget(label(f"[{source['id']}] {source['title']}", size=16, bold=True))
-            detail.add_widget(label(
-                f"{source['publisher']} · Accessed {source['accessed_on']}\n"
-                f"Supports: {', '.join(source['supports'])}\n"
-                f"License: {source['license']}\n{source['attribution']}", size=13, color=MUTED))
-            if source.get('evidence'):
-                evidence = source['evidence']
-                detail.add_widget(label(
-                    f"Source excerpt: {evidence['excerpt']}\nWhere: {evidence['location']}",
-                    size=13, color=MUTED))
-            detail.add_widget(label(source.get('revision_url') or source['url'], size=12, color=MUTED))
-            detail.add_widget(Action(text='Open reference in browser', on_release=
-                lambda *_, url=source.get('revision_url') or source['url']: webbrowser.open(url)))
-        detail.add_widget(label('Sources document factual content; they do not verify an encounter identification.',
-                                size=12, color=MUTED))
+        detail.add_widget(Action(text='Sources & review details',
+                                 on_release=lambda *_: self.open_sources(card)))
         scroll.add_widget(detail)
         content.add_widget(scroll)
         controls = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
@@ -775,6 +754,193 @@ class VitaDexApp(App):
         popup.bind(on_dismiss=lambda *_: setattr(self, 'fullscreen_popup', None))
         self.fullscreen_popup = popup
         popup.open()
+
+    def open_sources(self, card):
+        scroll = ScrollView(do_scroll_x=False)
+        body = column(padding=16)
+        body.add_widget(label('SOURCES & INFORMATION', size=13, color=GREEN, bold=True))
+        if card.organism.content_kind == 'fictional':
+            body.add_widget(label(
+                'Original VitaDex fiction. Descriptions, sizes, and roles are invented for the demo; '
+                'they are not verified wildlife facts. Rarity and moves are game mechanics.',
+                size=14, color=MUTED))
+        elif card.organism.content_kind == 'unreviewed':
+            body.add_widget(label(
+                'This saved card predates source review or has not been reviewed. '
+                'Its factual claims are not verified.', size=14, color=MUTED))
+        else:
+            body.add_widget(label(card.organism.scientific_name, size=17, bold=True))
+            body.add_widget(label(
+                f'Content review: {card.organism.reviewed_by} · {card.organism.reviewed_on}',
+                size=13, color=MUTED))
+        if card.organism.content_kind == 'source_checked':
+            body.add_widget(label(
+                'Facts compared against the references by an AI assistant. '
+                'Independent human review is still pending.', size=13, color=MUTED))
+        for source in card.organism.sources:
+            body.add_widget(label(f"[{source['id']}] {source['title']}", size=16, bold=True))
+            body.add_widget(label(
+                f"{source['publisher']} · Accessed {source['accessed_on']}\n"
+                f"Supports: {', '.join(source['supports'])}\n"
+                f"License: {source['license']}\n{source['attribution']}", size=13, color=MUTED))
+            if source.get('evidence'):
+                evidence = source['evidence']
+                body.add_widget(label(
+                    f"Source excerpt: {evidence['excerpt']}\nWhere: {evidence['location']}",
+                    size=13, color=MUTED))
+            body.add_widget(label(source.get('revision_url') or source['url'], size=12, color=MUTED))
+            body.add_widget(Action(text='Open reference in browser', on_release=
+                lambda *_, url=source.get('revision_url') or source['url']: webbrowser.open(url)))
+        body.add_widget(label('Sources document factual content; they do not verify an encounter identification.',
+                                size=12, color=MUTED))
+        body.add_widget(label('Stylized illustration; not an identification photograph.', size=12, color=MUTED))
+        scroll.add_widget(body)
+        content = BoxLayout(orientation='vertical', spacing=dp(12))
+        content.add_widget(scroll)
+        close = Action(text='Back to card', primary=True)
+        content.add_widget(close)
+        popup = Popup(title='Sources & information', content=content, size_hint=(.94, .92),
+                      background='', background_color=PAPER, title_color=GREEN)
+        close.bind(on_release=popup.dismiss)
+        self.active_overlay = popup
+        popup.bind(on_dismiss=lambda *_: setattr(self, 'active_overlay', None))
+        popup.open()
+        return popup
+
+    def open_question(self, card):
+        if getattr(self, 'ask_cancel', None):
+            self.ask_cancel.set()
+        if getattr(self, 'ask_provider', None):
+            self.ask_provider.clear()
+        body = column(padding=12)
+        body.add_widget(label('Ask about ' + card.title, size=22, bold=True))
+        question = TextInput(multiline=True, size_hint_y=None, height=dp(90),
+                             hint_text='What would you like to know?', foreground_color=INK,
+                             background_color=WHITE)
+        body.add_widget(question)
+        body.add_widget(label('Answers use this saved card’s cited facts. Unanswered questions stay unanswered.', size=14, color=MUTED))
+        preview = CheckBox(size_hint_y=None, height=dp(44))
+        body.add_widget(label('Optional preview: allow source-checked facts awaiting human review.', size=13, color=MUTED))
+        body.add_widget(preview)
+        mode = Spinner(text='Offline sources', values=('Offline sources', 'My model (send once)'),
+                       size_hint_y=None, height=dp(46))
+        body.add_widget(mode)
+        endpoint = TextInput(hint_text='HTTPS chat-completions endpoint', multiline=False,
+                             size_hint_y=None, height=dp(46))
+        model = TextInput(hint_text='Model name', multiline=False, size_hint_y=None, height=dp(46))
+        key = TextInput(hint_text='Session API key (never saved)', password=True, multiline=False,
+                        size_hint_y=None, height=dp(46))
+        config = column()
+        for widget in (endpoint, model, key):
+            config.add_widget(widget)
+        config.add_widget(label('The question and up to three saved fact passages go to your endpoint only when you press Send once. The key is session-only and clears on close or pause.', size=13, color=MUTED))
+        config_holder = BoxLayout(size_hint_y=None, height=0)
+        config_holder.add_widget(config)
+        body.add_widget(config_holder)
+        result = label('No request has been made.', size=15)
+        sources = column()
+        body.add_widget(result)
+        body.add_widget(sources)
+        send = Action(text='Find an answer', primary=True)
+        body.add_widget(send)
+        def mode_changed(*_):
+            send.text = 'Send once to my model' if mode.text.startswith('My model') else 'Find in offline sources'
+            config.disabled = not mode.text.startswith('My model')
+            config.opacity = 1 if not config.disabled else 0
+            config_holder.height = config.minimum_height if not config.disabled else 0
+        mode.bind(text=mode_changed)
+        config.bind(minimum_height=mode_changed)
+        mode_changed()
+        read = Action(text='Read answer aloud', disabled=True)
+        body.add_widget(read)
+        scroll = ScrollView(do_scroll_x=False)
+        scroll.add_widget(body)
+        content = BoxLayout(orientation='vertical', spacing=dp(8))
+        content.add_widget(scroll)
+        close = Action(text='Close / cancel')
+        content.add_widget(close)
+        popup = Popup(title='Ask VitaDex', content=content, size_hint=(.96, .94),
+                      background='', background_color=PAPER, title_color=GREEN)
+        state = {'cancel': Event(), 'provider': None, 'reading': False}
+        self.ask_cancel = state['cancel']
+        self.ask_key_widget = key
+        self.active_overlay = popup
+        self.ask_provider = None
+        def cancel(*_):
+            state['cancel'].set()
+            key.text = ''
+            if state['provider']:
+                state['provider'].clear()
+            if state['reading']:
+                self.speaker.stop()
+            if getattr(self, 'active_overlay', None) is popup:
+                self.active_overlay = None
+        popup.bind(on_dismiss=cancel)
+        close.bind(on_release=popup.dismiss)
+        def submit(*_):
+            if getattr(self, 'ask_worker', None) and self.ask_worker.is_alive():
+                result.text = 'The previous request is still stopping. Try again shortly.'
+                return
+            if not self.foreground or len(question.text) > 1000:
+                result.text = 'Use a question up to 1000 characters.'
+                return
+            state['cancel'].set()
+            token = Event()
+            state['cancel'] = token
+            self.ask_cancel = token
+            try:
+                provider = (SessionProvider(endpoint.text.strip(), model.text.strip(), key.text)
+                            if mode.text.startswith('My model') else None)
+            except ValueError as error:
+                result.text = str(error)
+                return
+            self.ask_provider = provider
+            state['provider'] = provider
+            send.disabled = True
+            read.disabled = True
+            sources.clear_widgets()
+            result.text = 'Checking the saved evidence…'
+            text, provisional = question.text, preview.active
+            def work():
+                try:
+                    answer = answer_card(card, text, provider, provisional, token)
+                    error = None
+                except Exception as caught:
+                    answer, error = None, str(caught)
+                def finish(_):
+                    if token.is_set() or not self.foreground:
+                        return
+                    send.disabled = False
+                    if error:
+                        result.text = error
+                        return
+                    result.text = ('Source-checked preview; human review pending.\n\n' if answer.provisional else '') + answer.text
+                    for source in answer.references:
+                        sources.add_widget(label('[' + source['id'] + '] ' + source['title'], size=13, color=MUTED))
+                        sources.add_widget(Action(text='Open cited reference', on_release=
+                            lambda *_, url=source.get('revision_url') or source['url']: webbrowser.open(url)))
+                    read.disabled = not bool(answer.passages)
+                    if hasattr(read, '_answer_callback'):
+                        read.unbind(on_release=read._answer_callback)
+                    def read_answer(*_):
+                        state['reading'] = True
+                        def failed(message):
+                            def show(_):
+                                if not token.is_set():
+                                    result.text += '\nVoice unavailable: ' + message
+                            Clock.schedule_once(show, 0)
+                        try:
+                            self.speaker.speak(spoken_answer(answer), on_error=failed)
+                        except Exception as error:
+                            failed(str(error))
+                    read._answer_callback = read_answer
+                    read.bind(on_release=read._answer_callback)
+                Clock.schedule_once(finish, 0)
+            self.ask_worker = Thread(target=work, daemon=True)
+            self.ask_worker.start()
+        send.bind(on_release=submit)
+        popup.open()
+        return popup
 
     def preview_update(self, card, organism):
         changes = changed_fields(asdict(card.organism), asdict(organism))
@@ -836,6 +1002,9 @@ class VitaDexApp(App):
 
     def _on_keyboard(self, window, key, *args):
         if key == 27:
+            if getattr(self, 'active_overlay', None):
+                self.active_overlay.dismiss()
+                return True
             if self.fullscreen_popup:
                 self.fullscreen_popup.dismiss()
             else:

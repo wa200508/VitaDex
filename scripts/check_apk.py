@@ -9,10 +9,11 @@ from zipfile import ZipFile
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('apk', type=Path)
 parser.add_argument('--aapt', required=True)
+parser.add_argument('--allow-network', action='store_true', help='Allow the explicitly requested model feature.')
 args = parser.parse_args()
 permissions = subprocess.run([args.aapt, 'dump', 'permissions', str(args.apk)],
                             check=True, text=True, capture_output=True, timeout=20).stdout
-for forbidden in ('CAMERA', 'RECORD_AUDIO', 'WAKE_LOCK', 'INTERNET', 'ACCESS_FINE_LOCATION'):
+for forbidden in ('CAMERA', 'RECORD_AUDIO', 'WAKE_LOCK', 'ACCESS_FINE_LOCATION') + (() if args.allow_network else ('INTERNET',)):
     if f'android.permission.{forbidden}' in permissions:
         raise SystemExit(f'Unexpected permission in preview: {forbidden}')
 with ZipFile(args.apk) as apk:
@@ -32,4 +33,4 @@ with ZipFile(args.apk) as apk:
         raise SystemExit('APK is missing its Python entry point.')
     if not required <= found:
         raise SystemExit(f'APK is missing required bundled files: {sorted(required - found)}')
-print('APK checks passed: no sensing/network/wake-lock permissions; catalog and corpus bundled.')
+print('APK checks passed: no sensing or wake-lock permissions; catalog and corpus bundled.')
