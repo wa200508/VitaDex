@@ -13,7 +13,7 @@ require people or real phones and have not been fabricated.
 
 ## Verification
 
-- **82 tests pass**, including review packet integrity, corpus versions and unsupported
+- **83 tests pass**, including review packet integrity, corpus versions and unsupported
   questions, archived source updates (including older snapshots without IDs),
   diagnostic opt-in/data minimization/write errors, and existing regression checks.
 - Configured lint, compilation, and diff checks pass.
@@ -33,7 +33,9 @@ conflicted with Buildozer 1.6.0's Cython<3 requirement. It was corrected to 0.29
 and a dependency-resolution dry run passed. Regular GitHub CI passed. The
 replacement Android build is being monitored at
 [run 41449912872](https://github.com/wa200508/VitaDex/actions/runs/41449912872).
-A running job is not evidence of a produced APK; record its final result before
+Its compilation step succeeded, but the older output checker required `main.py`
+instead of accepting the compiled `main.pyc`. The checker was corrected in the
+next build. A running job is not evidence of a verified artifact; record its final result before
 claiming an installable artifact.
 
 See [MOBILE_PREVIEW.md](../../MOBILE_PREVIEW.md),

@@ -107,7 +107,9 @@ class NativeEngine:
         candidates = []
         while iterator.hasNext():
             voice = iterator.next()
-            if not voice.isNetworkConnectionRequired() and str(voice.getLocale().getLanguage()) == 'en':
+            features = voice.getFeatures()
+            installed = features is not None and not features.contains('notInstalled')
+            if installed and not voice.isNetworkConnectionRequired() and str(voice.getLocale().getLanguage()) == 'en':
                 candidates.append(voice)
         candidates.sort(key=lambda voice: (str(voice.getLocale().getCountry()) != 'US', str(voice.getName())))
         if not candidates or self.synth.setVoice(candidates[0]) != 0:

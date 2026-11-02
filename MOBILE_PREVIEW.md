@@ -33,7 +33,8 @@ The app bundles its catalog and editorial corpus. Build checks reject missing
 files and camera, microphone, location, Internet, or wake-lock permissions. The
 only manifest addition is TTS service discovery, not permission to record audio.
 The current preview simulates encounters and makes no chat/network requests.
-Android narration selects an installed offline English voice or reports that no
+Android narration rejects voices requiring network access or marked `notInstalled`,
+then selects an installed offline English voice or reports that no
 usable voice is installed; it does not download one automatically. Other apps or
 the OS may still use the network independently.
 

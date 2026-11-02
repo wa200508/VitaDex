@@ -107,3 +107,51 @@ def test_native_lifecycle_with_simulated_android_handle(monkeypatch):
     assert handle.stopped and handle.disposed and engine.synth is None
     engine.resume()
     assert not engine.closed and not engine.ready.is_set()
+
+
+def test_android_never_selects_network_or_downloadable_voice():
+    from native_speech import NativeEngine
+    class Features:
+        def __init__(self, needs_download):
+            self.needs_download = needs_download
+        def contains(self, key):
+            return key == 'notInstalled' and self.needs_download
+    class Locale:
+        def getLanguage(self):
+            return 'en'
+        def getCountry(self):
+            return 'US'
+    class Voice:
+        def __init__(self, network, download):
+            self.network, self.download = network, download
+        def getFeatures(self):
+            return Features(self.download)
+        def isNetworkConnectionRequired(self):
+            return self.network
+        def getLocale(self):
+            return Locale()
+        def getName(self):
+            return 'voice'
+    wanted = Voice(False, False)
+    class Iterator:
+        def __init__(self):
+            self.items = iter([Voice(False, True), Voice(True, False), wanted])
+            self.left = 3
+        def hasNext(self):
+            return self.left > 0
+        def next(self):
+            self.left -= 1
+            return next(self.items)
+    class Voices:
+        def iterator(self):
+            return Iterator()
+    class Engine:
+        def getVoices(self):
+            return Voices()
+        def setVoice(self, voice):
+            assert voice is wanted
+            return 0
+    native = NativeEngine('android')
+    native.synth = Engine()
+    native._offline_android_voice()
+    assert native.voice_configured

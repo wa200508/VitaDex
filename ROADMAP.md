@@ -23,7 +23,7 @@ is planned. Placeholder art is allowed while core features are developed.
   error messages, and responsive collection columns.
 - Source, product, battery, and art-direction requirements; an unapproved art study
   outside runtime.
-- 82 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
+- 83 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
 - The first-five follow-up implements migration recovery, stable atomic identity,
   shared fact validation, speech lifecycle code, and incremental collection work.
   Actual-device speech/energy acceptance remains open; see
