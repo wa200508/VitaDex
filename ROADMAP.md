@@ -23,13 +23,15 @@ is planned. Placeholder art is allowed while core features are developed.
   error messages, and responsive collection columns.
 - Source, product, battery, and art-direction requirements; an unapproved art study
   outside runtime.
-- 97 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
+- 115 passing tests, configured lint/compile checks, and an expanded passing Kivy UI script.
+- Previewed journal backup/restore and a modular interface; Android document transfers
+  and iPhone Files integration remain open acceptance work.
 - The first-five follow-up implements migration recovery, stable atomic identity,
   shared fact validation, speech lifecycle code, and incremental collection work.
   Actual-device speech/energy acceptance remains open; see
   [the follow-up report](docs/review/TOP_FIVE.md).
 
-All of this includes local uncommitted work; it is not a published mobile release.
+This work is tracked on PR #2; it is not a published mobile release.
 An Android build spike and offline editorial retrieval corpus are implemented,
 but successful installation, actual-device audio/energy evidence, primary-source
 text ingestion, real identification, and LLM chat remain unverified or pending. The review found integrity gaps despite the

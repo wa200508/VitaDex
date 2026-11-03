@@ -36,5 +36,6 @@ allow Internet for the requested model feature; this does not allow camera/audio
 capture or wake locks and does not cause background model traffic.
 
 Human source approval and real phone audio/energy validation remain pending.
-The next independent feature work is journal backup/restore (VD-15), followed by
-personal notes/favorites (VD-16); final art and sensing remain lower priority.
+Journal backup/restore (VD-15) and the interface refactor now have a separate
+[follow-up report](REFACTOR_BACKUP.md). Personal notes/favorites (VD-16) are the
+next independent feature; final art and sensing remain lower priority.

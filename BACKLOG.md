@@ -27,7 +27,7 @@ collection replacement follows a storage failure. Depends: none.
 
 **Status: implementation and deterministic tests complete; actual-device acceptance pending VD-07/08.** Per-utterance/card events, bounded FIFO with explicit overflow, cancellation, pause/resume, shutdown, UI callback isolation, and native ownership adapters are present. Android/iOS playback and interruption are not claimed verified.
 
-Evidence: F02, `narration.py`, `main.py:557`.
+Evidence: F02, `narration.py`, `application.py`.
 
 Acceptance: native adapters report requested/started/completed/cancelled/failed
 against an utterance/card ID. Replay, mute, pause, lock, stop, and shutdown have
@@ -198,6 +198,8 @@ Depends: VD-02; device checks with VD-07.
 ## Later: enrich the journal without compromising power or trust
 
 ### VD-15 · P2 · M · Add journal backup/export and safe restore
+
+**Status: implemented and regression-tested locally; Android document-provider/device acceptance and iPhone Files integration remain open.** Versioned, checksummed JSON preserves source-bearing snapshots, discovery IDs, settings, and archived fact versions. Explicit merge/replace preview, duplicate resolution, stale-preview rejection, durable pre-restore safety copy, transactional rollback, and quiet session reload are implemented. Journal → Journal backups supports local copies, export, and restore; Android uses the system document picker without broad storage permissions. See [the refactor and backup report](docs/review/REFACTOR_BACKUP.md).
 
 Acceptance: export/import cards, provenance, discovery IDs, and relevant settings;
 validate versions and references before import, resolve duplicates, preview changes,

@@ -60,6 +60,18 @@ filtering, and sorting; **Mark all seen** clears new-card badges across restarts
 The Journal shows collection progress and your most recent card. Large collections
 use 12-card pages; hidden or unchanged views are reused.
 
+**Journal → Journal backups** exports your cards and cited facts to a portable JSON
+file. Choose a backup to preview **Merge new organisms** (keep existing cards) or
+**Replace whole journal** (restore the saved collection and settings), then confirm.
+A safety copy is saved first and appears in **Backups on this device**, where it
+can also be exported. Restored cards stay quiet and keep their discovery history.
+Import only files you trust: checksums detect damage, not who wrote or reviewed facts.
+The computer preview uses a file chooser; Android uses its system document picker
+without broad storage permissions. Actual phone transfers and iPhone Files integration
+remain acceptance work. Backups include archived fact versions and voice/unread settings;
+API keys are never included. Local copies disappear if app data is erased, so export
+a copy outside the app before uninstalling or resetting the device.
+
 The journal is stored as `journal.sqlite3` in Kivy's platform-specific app data
 directory (`VitaDexApp.user_data_dir`). A prior `journal.json` is migrated on first
 use; the original JSON is retained. Back up the journal before manual recovery.
@@ -67,6 +79,9 @@ If storage cannot be read, the app reports the error and blocks additions for th
 session. Resolve the storage problem and restart. If a save fails, the card is not
 added or reported as saved. New-card badges are saved locally. Existing journals created before this feature
 start with their older cards marked as seen.
+
+Implementation structure and restore limits are documented in
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 An Android preview APK has been built; real identification and phone validation
 remain pending. The first cited question flow is described below. Always

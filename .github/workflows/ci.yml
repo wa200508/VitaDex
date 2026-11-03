@@ -34,7 +34,7 @@ jobs:
         run: python -m ruff check .
 
       - name: Compile Python sources
-        run: python -m compileall -q *.py scripts tests
+        run: python -m compileall -q *.py vitadex_ui scripts tests
 
       - name: Run tests
         run: python -m pytest

@@ -73,7 +73,7 @@ def desktop():
     capture('journal-empty')
     for organism in CARD_DB.organisms.values():
         app.scan_screen.collect(organism)
-        app.fullscreen_popup.dismiss(animation=False)
+        app.dialogs.card_popup.dismiss(animation=False)
     assert len(app.cards) == count
     assert len(app.speaker.messages) == count
     assert len(JournalSession(app.journal_repository).new_cards) == count
@@ -113,14 +113,14 @@ def collection():
     from dataclasses import replace
     unknown = replace(next(iter(CARD_DB.organisms.values())), name='Unsaved test organism', scientific_name='Test unsaved organism', organism_id='taxon:test-unsaved')
     app.scan_screen.collect(unknown)
-    assert len(app.cards) == count and messages and app.fullscreen_popup is None
+    assert len(app.cards) == count and messages and app.dialogs.card_popup is None
     app.show_storage_error = original_message
     app.journal_repository.append_card = original
     from identification import IdentificationCandidate, IdentificationResult
     known = app.cards[0].organism
     result = IdentificationResult((IdentificationCandidate(known, 1.0),), source='test-sensor')
     assert not app.handle_encounter(result).is_first
-    assert app.fullscreen_popup is None and len(app.speaker.messages) == count
+    assert app.dialogs.card_popup is None and len(app.speaker.messages) == count
     app.read_card(app.cards[0])
     assert len(app.speaker.messages) == count + 1
     app.open_card(app.cards[0])
@@ -128,8 +128,8 @@ def collection():
 
 
 def details():
-    capture('card-detail', app.fullscreen_popup)
-    app.fullscreen_popup.dismiss(animation=False)
+    capture('card-detail', app.dialogs.card_popup)
+    app.dialogs.card_popup.dismiss(animation=False)
     Window.size = (360, 640)
     app.navigate('cardbook')
     Clock.schedule_once(guard(narrow), .3)
@@ -167,11 +167,11 @@ def explore():
     app.open_card(app.cards[0])
     app.read_card(app.cards[0])
     old = app.speaker.callbacks[-1]
-    old_label = app.card_voice_status
-    app.fullscreen_popup.dismiss(animation=False)
+    old_label = app.dialogs.voice_label
+    app.dialogs.card_popup.dismiss(animation=False)
     app.open_card(app.cards[1])
     app.read_card(app.cards[1])
-    new_label = app.card_voice_status
+    new_label = app.dialogs.voice_label
     from narration import SpeechEvent
     old['on_event'](SpeechEvent(old['utterance_id'], old['card_id'], 'failed', 'Old error'))
     Clock.schedule_once(guard(lambda: finish_checks(old_label, new_label)), .1)
@@ -179,7 +179,7 @@ def explore():
 
 def finish_checks(old_label, new_label):
     assert new_label is not old_label and 'Old error' not in new_label.text
-    app.fullscreen_popup.dismiss(animation=False)
+    app.dialogs.card_popup.dismiss(animation=False)
     from dataclasses import replace
     original = app.cards[0]
     current = replace(original.organism, description=original.organism.description + ' Updated test edition.')
@@ -189,7 +189,7 @@ def finish_checks(old_label, new_label):
     confirm.dispatch('on_release')
     assert len(app.cards) == count_before and len(app.speaker.messages) == speech_before
     assert app.cards[0].organism.description == current.description
-    app.fullscreen_popup.dismiss(animation=False)
+    app.dialogs.card_popup.dismiss(animation=False)
     app.on_pause()
     from identification import IdentificationResult
     assert app.handle_encounter(IdentificationResult((), source='background')) is None
@@ -217,10 +217,50 @@ def question_checks(popup, widgets, speech_before):
     texts = [getattr(w, 'text', '') for w in widgets]
     assert any('[dog-adw]' in text and 'jobs' in text for text in texts)
     assert len(app.speaker.messages) == speech_before
-    app.ask_key_widget.text = 'temporary-test-value'
+    app.questions.key_widget.text = 'temporary-test-value'
     popup.dismiss(animation=False)
-    assert app.ask_cancel.is_set() and not app.ask_key_widget.text
-    print('UI checks passed: discovery, filters, persistence, errors, paging, stale events, lifecycle, fact update, sources, offline questions, key clearing, resize.')
+    assert app.questions.cancelled and not app.questions.key_widget.text
+    backup_checks()
+
+
+def descendants(widget):
+    yield widget
+    for child in widget.children:
+        yield from descendants(child)
+
+
+def backup_checks():
+    from backup import JournalBackup
+    app.navigate('home')
+    JournalBackup(app.journal_repository).export(Path(workspace.name) / 'backups' / 'test-backup.json')
+    popup = app.backups.open()
+    widgets = list(descendants(popup.content))
+    local = next(w for w in widgets if getattr(w, 'text', '') == 'Backups on this device')
+    assert 'test-backup.json' in local.values
+    local.text = 'test-backup.json'
+    Clock.schedule_once(guard(lambda: restore_preview_checks(popup, widgets)), .3)
+
+
+def restore_preview_checks(popup, widgets):
+    capture('backups-narrow', popup)
+    confirm = next(w for w in widgets if getattr(w, 'text', '') == 'Confirm restore')
+    assert not confirm.disabled
+    assert any('0 cards to restore' in getattr(w, 'text', '') for w in widgets)
+    before = len(app.speaker.messages)
+    confirm.dispatch('on_release')
+    Clock.schedule_once(guard(lambda: restored_checks(popup, widgets, before)), .3)
+
+
+def restored_checks(popup, widgets, speech_before):
+    assert any('Journal restored.' in getattr(w, 'text', '') for w in widgets)
+    assert len(app.cards) == count + 30 and len(app.speaker.messages) == speech_before
+    assert list((Path(workspace.name) / 'backups').glob('before-restore-*.json'))
+    from identification import IdentificationCandidate, IdentificationResult
+    known = app.cards[0].organism
+    assert not app.handle_encounter(IdentificationResult((IdentificationCandidate(known, 1.0),), source='test')).is_first
+    assert len(app.speaker.messages) == speech_before
+    popup.dismiss(animation=False)
+    print('UI checks passed: discovery, filters, persistence, errors, paging, stale events, lifecycle, fact update, sources, offline questions, key clearing, backups, restore without narration, resize.')
     app.stop()
 
 

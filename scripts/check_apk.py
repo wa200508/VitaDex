@@ -31,6 +31,10 @@ with ZipFile(args.apk) as apk:
     required = {'data/database.json', 'data/corpus.json'}
     if not ({'main.py', 'main.pyc'} & found):
         raise SystemExit('APK is missing its Python entry point.')
+    for module in ('application', 'backup', 'questions', 'documents', 'vitadex_ui/screens',
+                   'vitadex_ui/dialogs', 'vitadex_ui/questions', 'vitadex_ui/backups', 'vitadex_ui/documents'):
+        if not ({module + '.py', module + '.pyc'} & found):
+            raise SystemExit(f'APK is missing application module: {module}')
     if not required <= found:
         raise SystemExit(f'APK is missing required bundled files: {sorted(required - found)}')
 print('APK checks passed: no sensing or wake-lock permissions; catalog and corpus bundled.')
