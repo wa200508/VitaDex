@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local mobile builds and device evidence
+.buildozer/
+bin/
+device-results/
+!buildozer.spec
+
+!docs/device-results/
+!docs/device-results/*.json
+
+# Developer catalog-update backups
+data/*.bak*

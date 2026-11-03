@@ -1,0 +1,44 @@
+name: Android preview APK
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**.py'
+      - 'data/**.json'
+      - 'buildozer.spec'
+      - 'requirements-build.txt'
+      - 'mobile/android/**'
+      - '.github/workflows/android-preview.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.14'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip autoconf automake libtool pkg-config cmake ninja-build libffi-dev libssl-dev zlib1g-dev libltdl-dev
+          python -m pip install -r requirements-build.txt
+      - name: Build preview
+        run: buildozer android debug
+      - name: Check APK contents and permissions
+        run: |
+          AAPT_PATH=$(find "$HOME/.buildozer/android/platform/android-sdk/build-tools" -type f -name aapt | sort | tail -n 1)
+          python scripts/check_apk.py bin/*.apk --aapt "$AAPT_PATH" --allow-network
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitadex-android-preview
+          path: bin/*.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,562 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "organism_id": "taxon:dog",
+      "name": "Dog",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "decision": "pending",
+      "reviewer_kind": "",
+      "reviewer": "",
+      "reviewed_on": "",
+      "checks": {
+        "facts_supported": false,
+        "scientific_names": false,
+        "child_readability": false,
+        "reuse_and_attribution": false
+      },
+      "notes": "",
+      "claims": {
+        "scientific_name": {
+          "text": "Canis lupus familiaris",
+          "sources": [
+            "dog-adw",
+            "dog-itis"
+          ]
+        },
+        "name": {
+          "text": "Dog",
+          "sources": [
+            "dog-adw",
+            "dog-itis"
+          ]
+        },
+        "type": {
+          "text": "Mammal",
+          "sources": [
+            "dog-adw"
+          ]
+        },
+        "description": {
+          "text": "Dogs are mammals that often live with people. They come in many shapes and sizes. Dogs use sounds and body movements to communicate, and their noses help them explore the world.",
+          "sources": [
+            "dog-adw"
+          ]
+        },
+        "habitat": {
+          "text": "Homes and other places where people live around the world.",
+          "sources": [
+            "dog-adw"
+          ]
+        },
+        "environment_role": {
+          "text": "Companion animal; some trained dogs help people with jobs.",
+          "sources": [
+            "dog-adw"
+          ]
+        },
+        "physical_dimensions": {
+          "text": "Size varies greatly between breeds.",
+          "sources": [
+            "dog-adw"
+          ]
+        },
+        "notes": {
+          "text": "This card uses Canis lupus familiaris, the name used by Animal Diversity Web. Other references use Canis familiaris.",
+          "sources": [
+            "dog-adw",
+            "dog-itis"
+          ]
+        }
+      },
+      "references": [
+        {
+          "id": "dog-adw",
+          "title": "Dog (Canis lupus familiaris)",
+          "publisher": "Animal Diversity Web, University of Michigan",
+          "url": "https://animaldiversity.org/accounts/Canis_lupus_familiaris/",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "type",
+            "description",
+            "habitat",
+            "environment_role",
+            "physical_dimensions",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Tanya Dewey and Sheetal Bhagat; original VitaDex summary of cited facts.",
+          "evidence": {
+            "location": "Physical Description; Habitat; Communication and Perception; Economic Importance for Humans: Positive",
+            "excerpt": "Domestic dogs come in a bewildering variety of shapes and sizes.",
+            "sha256": "8e5a9e8f318ad0ba6c947393aaf303ade2df69c3327a71d928c944d31502655d"
+          }
+        },
+        {
+          "id": "dog-itis",
+          "title": "Canis familiaris — taxonomic report",
+          "publisher": "Integrated Taxonomic Information System",
+          "url": "https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=183815",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "ITIS taxonomic report; name alternatives, not a claim about a particular dog.",
+          "evidence": {
+            "location": "Taxonomy and Nomenclature: synonym and common names",
+            "excerpt": "Canis lupus familiaris",
+            "sha256": "15460a0b65c0da463e1fb2f133fc34e3aa1a0128df58e2c68f8b530aafa22a1b"
+          }
+        }
+      ]
+    },
+    {
+      "organism_id": "taxon:cat",
+      "name": "Cat",
+      "entry_sha256": "12fced29feed979f5371b5b36b18072c7ae85a386232d4b2e8ed9e9b36c68542",
+      "decision": "pending",
+      "reviewer_kind": "",
+      "reviewer": "",
+      "reviewed_on": "",
+      "checks": {
+        "facts_supported": false,
+        "scientific_names": false,
+        "child_readability": false,
+        "reuse_and_attribution": false
+      },
+      "notes": "",
+      "claims": {
+        "scientific_name": {
+          "text": "Felis catus",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "name": {
+          "text": "Cat",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "type": {
+          "text": "Mammal",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "description": {
+          "text": "Cats are mammals with fur and whiskers. Their whiskers help them sense nearby things. Cats use sounds like meows and purrs to communicate. Many cats live with people as pets.",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "habitat": {
+          "text": "Homes and other places near people around the world.",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "environment_role": {
+          "text": "Companion animal; cats also hunt small animals.",
+          "sources": [
+            "cat-adw"
+          ]
+        },
+        "notes": {
+          "text": "Cats use their tongues to groom their fur.",
+          "sources": [
+            "cat-adw"
+          ]
+        }
+      },
+      "references": [
+        {
+          "id": "cat-adw",
+          "title": "Domestic cat (Felis catus)",
+          "publisher": "Animal Diversity Web, University of Michigan",
+          "url": "https://animaldiversity.org/accounts/Felis_catus/",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "type",
+            "description",
+            "habitat",
+            "environment_role",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Nicolle Birch Anna Toenjes; editors Kevin Potts and John Berini. Original VitaDex summary of cited facts.",
+          "evidence": {
+            "location": "Communication and Perception; Habitat; Economic Importance for Humans: Positive",
+            "excerpt": "They have vibrissae on the muzzle, eyebrows, and elbows which function as haptic receptors.",
+            "sha256": "f5938490afd226febf42742b048621e1df0f9027db43eee2afd3c76541c79bb4"
+          }
+        }
+      ]
+    },
+    {
+      "organism_id": "taxon:red-maple",
+      "name": "Red Maple",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "decision": "pending",
+      "reviewer_kind": "",
+      "reviewer": "",
+      "reviewed_on": "",
+      "checks": {
+        "facts_supported": false,
+        "scientific_names": false,
+        "child_readability": false,
+        "reuse_and_attribution": false
+      },
+      "notes": "",
+      "claims": {
+        "scientific_name": {
+          "text": "Acer rubrum",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "name": {
+          "text": "Red Maple",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "type": {
+          "text": "Tree",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "description": {
+          "text": "A red maple is a tree that grows across Ohio. Its leaves have pointed sections called lobes. In fall, its leaves can turn red or orange. Its seeds have little wings.",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "habitat": {
+          "text": "Moist places across Ohio, including low ground and woods.",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "environment_role": {
+          "text": "Some mammals eat parts of this tree.",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "physical_dimensions": {
+          "text": "Often 60 to 80 feet tall when grown.",
+          "sources": [
+            "maple-oplin"
+          ]
+        },
+        "notes": {
+          "text": "This card is for red maple. Other kinds of maple trees also grow in Ohio.",
+          "sources": [
+            "maple-oplin",
+            "maple-index"
+          ]
+        }
+      },
+      "references": [
+        {
+          "id": "maple-oplin",
+          "title": "Red Maple — What Tree Is It?",
+          "publisher": "OPLIN and Ohio Historical Society",
+          "url": "https://tree.oplin.org/tree/maplered",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "type",
+            "description",
+            "habitat",
+            "environment_role",
+            "physical_dimensions",
+            "notes"
+          ],
+          "license": "Reference site: CC BY-NC-SA 3.0 US (https://creativecommons.org/licenses/by-nc-sa/3.0/us/). Includes a brief attributed excerpt; summary and illustration are original.",
+          "attribution": "OPLIN and Ohio Historical Society. Original VitaDex factual summary; no source photos used; brief attributed excerpt included.",
+          "evidence": {
+            "location": "Fruit Characteristics; species description; Tree Size",
+            "excerpt": "Several kinds of mammals feed on parts of the tree.",
+            "sha256": "ac41c7e77c111efc8d9997e95389f0b2939572a9873ddd934c177c9ed85188c2"
+          }
+        },
+        {
+          "id": "maple-index",
+          "title": "What Tree Is It? — identify by name",
+          "publisher": "OPLIN and Ohio Historical Society",
+          "url": "https://tree.oplin.org/name.php",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "notes"
+          ],
+          "license": "Reference site: CC BY-NC-SA 3.0 US (https://creativecommons.org/licenses/by-nc-sa/3.0/us/). Includes a brief attributed excerpt; summary and illustration are original.",
+          "attribution": "OPLIN and Ohio Historical Society; Ohio maple species context.",
+          "evidence": {
+            "location": "Common-name index, maple entries",
+            "excerpt": "Red Maple",
+            "sha256": "addccceac8d2908686b9bf011b23946cb17c54ada2e407ec2d38767c2a0b3362"
+          }
+        }
+      ]
+    },
+    {
+      "organism_id": "taxon:kentucky-bluegrass",
+      "name": "Kentucky Bluegrass",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "decision": "pending",
+      "reviewer_kind": "",
+      "reviewer": "",
+      "reviewed_on": "",
+      "checks": {
+        "facts_supported": false,
+        "scientific_names": false,
+        "child_readability": false,
+        "reuse_and_attribution": false
+      },
+      "notes": "",
+      "claims": {
+        "scientific_name": {
+          "text": "Poa pratensis",
+          "sources": [
+            "grass-ncsu"
+          ]
+        },
+        "name": {
+          "text": "Kentucky Bluegrass",
+          "sources": [
+            "grass-ncsu"
+          ]
+        },
+        "type": {
+          "text": "Grass",
+          "sources": [
+            "grass-ncsu"
+          ]
+        },
+        "description": {
+          "text": "Kentucky bluegrass is one kind of grass that can grow in an Ohio lawn. It has green leaves and spreads with stems under the ground. A lawn can have several kinds of grass together.",
+          "sources": [
+            "grass-ncsu",
+            "grass-ohio",
+            "grass-isu"
+          ]
+        },
+        "habitat": {
+          "text": "Lawns, including sunny lawns in Ohio.",
+          "sources": [
+            "grass-ncsu",
+            "grass-ohio",
+            "grass-isu"
+          ]
+        },
+        "environment_role": {
+          "text": "Grows as a mat of grass used to cover lawns.",
+          "sources": [
+            "grass-ncsu"
+          ]
+        },
+        "physical_dimensions": {
+          "text": "Uncut leaves can grow up to 18 inches long.",
+          "sources": [
+            "grass-ncsu"
+          ]
+        },
+        "notes": {
+          "text": "This is one lawn-grass species, not a name for every patch of grass.",
+          "sources": [
+            "grass-ohio",
+            "grass-isu"
+          ]
+        }
+      },
+      "references": [
+        {
+          "id": "grass-ncsu",
+          "title": "Poa pratensis — Plant Toolbox",
+          "publisher": "NC State Extension",
+          "url": "https://plants.ces.ncsu.edu/plants/poa-pratensis/",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "type",
+            "description",
+            "habitat",
+            "environment_role",
+            "physical_dimensions"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "NC State Extension Gardener Plant Toolbox. Original VitaDex summary; no third-party photos used.",
+          "evidence": {
+            "location": "Description, growth habit and leaves",
+            "excerpt": "It spreads by creeping rhizomes to form mats.",
+            "sha256": "d384ffe06860c9c256f7fef4e46f973cd7fe9a72feccb62fffc87e163c2b2aff"
+          }
+        },
+        {
+          "id": "grass-ohio",
+          "title": "Grass seed #917340 — Lorain County, Ohio",
+          "publisher": "Ask Extension",
+          "url": "https://ask.extension.org/kb/faq.php?id=917340",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "description",
+            "habitat",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Ask Extension expert response, September 15, 2025; Ohio lawn context.",
+          "evidence": {
+            "location": "Expert response, September 15, 2025",
+            "excerpt": "Generally, our lawns are made up of mostly cool season grasses, like Kentucky bluegrass.",
+            "sha256": "da81d9c54287133b1105f87acd6b794862fe263a5839faa9053e12d44ee24b09"
+          }
+        },
+        {
+          "id": "grass-isu",
+          "title": "What type of grass seed mix should I purchase?",
+          "publisher": "Iowa State University Extension and Outreach",
+          "url": "https://yardandgarden.extension.iastate.edu/faq/what-type-grass-seed-mix-should-i-purchase",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "description",
+            "habitat",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Richard Jauron, updated March 20, 2024. Original VitaDex summary of grass mixtures.",
+          "evidence": {
+            "location": "Answer: sun-and-shade mixtures",
+            "excerpt": "Kentucky bluegrass will be the dominant grass in the sunny areas",
+            "sha256": "33760e87eaab0966740933858725912f514136cb66860c88f97a2d4be9c873c9"
+          }
+        }
+      ]
+    },
+    {
+      "organism_id": "taxon:american-robin",
+      "name": "American Robin",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "decision": "pending",
+      "reviewer_kind": "",
+      "reviewer": "",
+      "reviewed_on": "",
+      "checks": {
+        "facts_supported": false,
+        "scientific_names": false,
+        "child_readability": false,
+        "reuse_and_attribution": false
+      },
+      "notes": "",
+      "claims": {
+        "scientific_name": {
+          "text": "Turdus migratorius",
+          "sources": [
+            "robin-smithsonian"
+          ]
+        },
+        "name": {
+          "text": "American Robin",
+          "sources": [
+            "robin-smithsonian"
+          ]
+        },
+        "type": {
+          "text": "Bird",
+          "sources": [
+            "robin-smithsonian"
+          ]
+        },
+        "description": {
+          "text": "An American robin is a bird with a reddish-brown chest. You may see one hopping across a lawn. Robins eat worms, insects, and fruit. They often build nests in trees.",
+          "sources": [
+            "robin-smithsonian",
+            "robin-cornell"
+          ]
+        },
+        "habitat": {
+          "text": "Lawns, gardens, parks, and woods.",
+          "sources": [
+            "robin-smithsonian",
+            "robin-cornell"
+          ]
+        },
+        "environment_role": {
+          "text": "Eats small animals such as worms and insects, as well as fruit.",
+          "sources": [
+            "robin-smithsonian",
+            "robin-cornell"
+          ]
+        },
+        "physical_dimensions": {
+          "text": "About 8 to 11 inches long.",
+          "sources": [
+            "robin-smithsonian"
+          ]
+        },
+        "notes": {
+          "text": "Many robins stay in colder places through winter if they can find food.",
+          "sources": [
+            "robin-smithsonian"
+          ]
+        }
+      },
+      "references": [
+        {
+          "id": "robin-smithsonian",
+          "title": "American robin — animal fact sheet",
+          "publisher": "Smithsonian’s National Zoo and Conservation Biology Institute",
+          "url": "https://nationalzoo.si.edu/animals/american-robin",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "scientific_name",
+            "name",
+            "type",
+            "description",
+            "habitat",
+            "environment_role",
+            "physical_dimensions",
+            "notes"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Smithsonian’s National Zoo and Conservation Biology Institute; original VitaDex factual summary.",
+          "evidence": {
+            "location": "Size; Native Habitat; Taxonomic Information",
+            "excerpt": "Genus and Species: Turdus migratorius",
+            "sha256": "4a9f907502ad275768ba29caf13f35ce8d2c9d48425a9c5986e5a8f53ab6e588"
+          }
+        },
+        {
+          "id": "robin-cornell",
+          "title": "American Robin — Life History",
+          "publisher": "Cornell Lab of Ornithology",
+          "url": "https://www.allaboutbirds.org/guide/American_Robin/lifehistory",
+          "accessed_on": "2026-11-02",
+          "supports": [
+            "description",
+            "habitat",
+            "environment_role"
+          ],
+          "license": "Source copyright and website terms apply. No bulk-text redistribution license asserted; a brief attributed excerpt is included for verification.",
+          "attribution": "Cornell Lab of Ornithology, All About Birds; original VitaDex summary of diet, habitat, and nesting.",
+          "evidence": {
+            "location": "Food; Habitat; Nest Placement",
+            "excerpt": "American Robins eat large numbers of both invertebrates and fruit.",
+            "sha256": "c6ed266196396b78f35ebc9cc4c1b7cab32ef26eb7661eefd1b1d8661e271a22"
+          }
+        }
+      ]
+    }
+  ]
+}

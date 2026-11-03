@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "device_class": "",
+  "approved_by": "",
+  "baseline_sessions": [],
+  "units": "",
+  "measurement_method": "",
+  "limits": {
+    "idle": null,
+    "browse": null,
+    "first-discovery": null,
+    "repeat-discovery": null,
+    "narration": null,
+    "background-lock": null
+  },
+  "status": "awaiting_real_device_baselines"
+}

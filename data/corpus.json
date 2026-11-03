@@ -1,0 +1,458 @@
+{
+  "version": 1,
+  "catalog_sha256": "25b14ae5a446d0b07ae39c1c6a09e030a0cd240345c8405e4a216f7c8be88ae4",
+  "passages": [
+    {
+      "id": "taxon:dog:description",
+      "organism_id": "taxon:dog",
+      "field": "description",
+      "text": "Dogs are mammals that often live with people. They come in many shapes and sizes. Dogs use sounds and body movements to communicate, and their noses help them explore the world.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "dog-adw"
+      ],
+      "source_versions": {
+        "dog-adw": "a711d7d7a242552138c0e1e94bfb7a7b17fd4f4995296a81e66027e214614045"
+      },
+      "content_sha256": "d3af5ae3730aa8308638a6df19c02fa4ed69bfc147cd7592a03ffc2107bc413f",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:dog:habitat",
+      "organism_id": "taxon:dog",
+      "field": "habitat",
+      "text": "Homes and other places where people live around the world.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "dog-adw"
+      ],
+      "source_versions": {
+        "dog-adw": "a711d7d7a242552138c0e1e94bfb7a7b17fd4f4995296a81e66027e214614045"
+      },
+      "content_sha256": "237bf4d88e5c3df90053e279a80cf359f5f63d9f252e36b0d4d4e55affa2a014",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:dog:environment_role",
+      "organism_id": "taxon:dog",
+      "field": "environment_role",
+      "text": "Companion animal; some trained dogs help people with jobs.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "dog-adw"
+      ],
+      "source_versions": {
+        "dog-adw": "a711d7d7a242552138c0e1e94bfb7a7b17fd4f4995296a81e66027e214614045"
+      },
+      "content_sha256": "bc36bc9de2c503baee201d0184e3fb097ca300511c6524ce8130b5e77edab218",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:dog:physical_dimensions",
+      "organism_id": "taxon:dog",
+      "field": "physical_dimensions",
+      "text": "Size varies greatly between breeds.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "dog-adw"
+      ],
+      "source_versions": {
+        "dog-adw": "a711d7d7a242552138c0e1e94bfb7a7b17fd4f4995296a81e66027e214614045"
+      },
+      "content_sha256": "e7f9c414ae7aaf909f83e5251ac4e36cf26d9a28e1520dc360138b3b93f51415",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:dog:notes",
+      "organism_id": "taxon:dog",
+      "field": "notes",
+      "text": "This card uses Canis lupus familiaris, the name used by Animal Diversity Web. Other references use Canis familiaris.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "dog-adw",
+        "dog-itis"
+      ],
+      "source_versions": {
+        "dog-adw": "a711d7d7a242552138c0e1e94bfb7a7b17fd4f4995296a81e66027e214614045",
+        "dog-itis": "62bce273b12a47ba38c889bf7f149040d7c12a109e9b234695b3000ae956297d"
+      },
+      "content_sha256": "e9da0224f624f22dbb3b5afc0fbc6ddc10e580dbe93da25b25c8b501644b0bf1",
+      "entry_sha256": "2a078220e42d55a58fea5b6cc83225f296d2f55aed1193a1814408d40b7b1c30",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:cat:description",
+      "organism_id": "taxon:cat",
+      "field": "description",
+      "text": "Cats are mammals with fur and whiskers. Their whiskers help them sense nearby things. Cats use sounds like meows and purrs to communicate. Many cats live with people as pets.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "cat-adw"
+      ],
+      "source_versions": {
+        "cat-adw": "04a79380c6418fe08246a73c712e1e38d089086aaa2e5c7cc09691136e7d4d42"
+      },
+      "content_sha256": "e5b96d1f43539d973e1c65a72dcbc055d52867598f163508fa88207ddc3d50d6",
+      "entry_sha256": "12fced29feed979f5371b5b36b18072c7ae85a386232d4b2e8ed9e9b36c68542",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:cat:habitat",
+      "organism_id": "taxon:cat",
+      "field": "habitat",
+      "text": "Homes and other places near people around the world.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "cat-adw"
+      ],
+      "source_versions": {
+        "cat-adw": "04a79380c6418fe08246a73c712e1e38d089086aaa2e5c7cc09691136e7d4d42"
+      },
+      "content_sha256": "aea8067a05cfc3133f6e4384c52dd5ad904884244b7c0b61511bd8348bd1e411",
+      "entry_sha256": "12fced29feed979f5371b5b36b18072c7ae85a386232d4b2e8ed9e9b36c68542",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:cat:environment_role",
+      "organism_id": "taxon:cat",
+      "field": "environment_role",
+      "text": "Companion animal; cats also hunt small animals.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "cat-adw"
+      ],
+      "source_versions": {
+        "cat-adw": "04a79380c6418fe08246a73c712e1e38d089086aaa2e5c7cc09691136e7d4d42"
+      },
+      "content_sha256": "20aba33dc6e418a6b81ba86e89ff7774ffedd92397d9dbe6ff97e50bf525fd54",
+      "entry_sha256": "12fced29feed979f5371b5b36b18072c7ae85a386232d4b2e8ed9e9b36c68542",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:cat:notes",
+      "organism_id": "taxon:cat",
+      "field": "notes",
+      "text": "Cats use their tongues to groom their fur.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "cat-adw"
+      ],
+      "source_versions": {
+        "cat-adw": "04a79380c6418fe08246a73c712e1e38d089086aaa2e5c7cc09691136e7d4d42"
+      },
+      "content_sha256": "046c0655dfd79a70079d005d06ae107d783b52440b6f8b2e504553d77880baa7",
+      "entry_sha256": "12fced29feed979f5371b5b36b18072c7ae85a386232d4b2e8ed9e9b36c68542",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:red-maple:description",
+      "organism_id": "taxon:red-maple",
+      "field": "description",
+      "text": "A red maple is a tree that grows across Ohio. Its leaves have pointed sections called lobes. In fall, its leaves can turn red or orange. Its seeds have little wings.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "maple-oplin"
+      ],
+      "source_versions": {
+        "maple-oplin": "fbd8ab66971635ec89a5ba71b76a54d774a33bf560fb1d3fd56e36fcdd784938"
+      },
+      "content_sha256": "b1a040f9ec8cce184114a12fa19c4e2639c36ef5b46694efbed8e9311127e1bd",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:red-maple:habitat",
+      "organism_id": "taxon:red-maple",
+      "field": "habitat",
+      "text": "Moist places across Ohio, including low ground and woods.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "maple-oplin"
+      ],
+      "source_versions": {
+        "maple-oplin": "fbd8ab66971635ec89a5ba71b76a54d774a33bf560fb1d3fd56e36fcdd784938"
+      },
+      "content_sha256": "3689859d9df8dea2d0a275ad3b1e80df490c7289ced8fb0d8666a6f8baddef26",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:red-maple:environment_role",
+      "organism_id": "taxon:red-maple",
+      "field": "environment_role",
+      "text": "Some mammals eat parts of this tree.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "maple-oplin"
+      ],
+      "source_versions": {
+        "maple-oplin": "fbd8ab66971635ec89a5ba71b76a54d774a33bf560fb1d3fd56e36fcdd784938"
+      },
+      "content_sha256": "a2246c3b6ee578780f1d1d34e04cefaa0ee95af76b20d8d2d3faaf1b140c3c73",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:red-maple:physical_dimensions",
+      "organism_id": "taxon:red-maple",
+      "field": "physical_dimensions",
+      "text": "Often 60 to 80 feet tall when grown.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "maple-oplin"
+      ],
+      "source_versions": {
+        "maple-oplin": "fbd8ab66971635ec89a5ba71b76a54d774a33bf560fb1d3fd56e36fcdd784938"
+      },
+      "content_sha256": "76c4e598cd46fbbf03133bc742cdfaafa1f61a661a6f1c489a6b532faddb9234",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:red-maple:notes",
+      "organism_id": "taxon:red-maple",
+      "field": "notes",
+      "text": "This card is for red maple. Other kinds of maple trees also grow in Ohio.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "maple-oplin",
+        "maple-index"
+      ],
+      "source_versions": {
+        "maple-oplin": "fbd8ab66971635ec89a5ba71b76a54d774a33bf560fb1d3fd56e36fcdd784938",
+        "maple-index": "4a45f1b19794fb0338ae2606140f087031b7c63a439853623cb95e2e07c2f1cc"
+      },
+      "content_sha256": "b6c4795bf33f19f2282075367ad9367f1c96f6de14c6d22280693ec7d759b9a0",
+      "entry_sha256": "5569c1def8a953b8c4140853856fdb383570ede99414ee45cbff8960b23e9fe8",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:kentucky-bluegrass:description",
+      "organism_id": "taxon:kentucky-bluegrass",
+      "field": "description",
+      "text": "Kentucky bluegrass is one kind of grass that can grow in an Ohio lawn. It has green leaves and spreads with stems under the ground. A lawn can have several kinds of grass together.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "grass-ncsu",
+        "grass-ohio",
+        "grass-isu"
+      ],
+      "source_versions": {
+        "grass-ncsu": "cebe45b0b45e3081d1900a9452aacb6e804c4a6643eb0878088910b276a143a7",
+        "grass-ohio": "74cf3a8a263e4f44a5a06f0295800b9048d83eed86d576e5b2a627edb2485fb1",
+        "grass-isu": "503004e0a45eb028e02c269f42327fd68c9cc14bbf7f429ee8e129cc2e612124"
+      },
+      "content_sha256": "8008aa2bec47283d93bb84904cfab7613c388d31abaed3ff2fa5a0c4ef085377",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:kentucky-bluegrass:habitat",
+      "organism_id": "taxon:kentucky-bluegrass",
+      "field": "habitat",
+      "text": "Lawns, including sunny lawns in Ohio.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "grass-ncsu",
+        "grass-ohio",
+        "grass-isu"
+      ],
+      "source_versions": {
+        "grass-ncsu": "cebe45b0b45e3081d1900a9452aacb6e804c4a6643eb0878088910b276a143a7",
+        "grass-ohio": "74cf3a8a263e4f44a5a06f0295800b9048d83eed86d576e5b2a627edb2485fb1",
+        "grass-isu": "503004e0a45eb028e02c269f42327fd68c9cc14bbf7f429ee8e129cc2e612124"
+      },
+      "content_sha256": "e4736cf0e3bdcd1bbb50114e6ce7c18fe789e58ba82c3d6c135279c44a8f9700",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:kentucky-bluegrass:environment_role",
+      "organism_id": "taxon:kentucky-bluegrass",
+      "field": "environment_role",
+      "text": "Grows as a mat of grass used to cover lawns.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "grass-ncsu"
+      ],
+      "source_versions": {
+        "grass-ncsu": "cebe45b0b45e3081d1900a9452aacb6e804c4a6643eb0878088910b276a143a7"
+      },
+      "content_sha256": "3080f51a0a8d3f6146461eb7f03f13e80a4b3d2f382641f308caecbf8dc05640",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:kentucky-bluegrass:physical_dimensions",
+      "organism_id": "taxon:kentucky-bluegrass",
+      "field": "physical_dimensions",
+      "text": "Uncut leaves can grow up to 18 inches long.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "grass-ncsu"
+      ],
+      "source_versions": {
+        "grass-ncsu": "cebe45b0b45e3081d1900a9452aacb6e804c4a6643eb0878088910b276a143a7"
+      },
+      "content_sha256": "634c5a3c9ea4dc88b55d48228cb00c314b82868313498fd1b4a0d4811b442e90",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:kentucky-bluegrass:notes",
+      "organism_id": "taxon:kentucky-bluegrass",
+      "field": "notes",
+      "text": "This is one lawn-grass species, not a name for every patch of grass.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "grass-ohio",
+        "grass-isu"
+      ],
+      "source_versions": {
+        "grass-ohio": "74cf3a8a263e4f44a5a06f0295800b9048d83eed86d576e5b2a627edb2485fb1",
+        "grass-isu": "503004e0a45eb028e02c269f42327fd68c9cc14bbf7f429ee8e129cc2e612124"
+      },
+      "content_sha256": "7f3adb7719313d061325ed1778eeb6d6c5f4bdf0093cc960c3b057a815d49854",
+      "entry_sha256": "d612b3089b92ecb73bff9b2c6c0a17708fbaf59140a04983098a1edb5e28a54a",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:american-robin:description",
+      "organism_id": "taxon:american-robin",
+      "field": "description",
+      "text": "An American robin is a bird with a reddish-brown chest. You may see one hopping across a lawn. Robins eat worms, insects, and fruit. They often build nests in trees.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "robin-smithsonian",
+        "robin-cornell"
+      ],
+      "source_versions": {
+        "robin-smithsonian": "d14ee0ea72ad9a616aa84397806b5e403ce4eb14827821491667f28053b960b1",
+        "robin-cornell": "a89e01af17f86d9fba5040db4bce7a0c2adf3055e6c79cf5d5d731915e900080"
+      },
+      "content_sha256": "2d1b0b7a65bc884370db71bd12d96c3822339e4a6ac0ad3bb01c898dbff3a6e4",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:american-robin:habitat",
+      "organism_id": "taxon:american-robin",
+      "field": "habitat",
+      "text": "Lawns, gardens, parks, and woods.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "robin-smithsonian",
+        "robin-cornell"
+      ],
+      "source_versions": {
+        "robin-smithsonian": "d14ee0ea72ad9a616aa84397806b5e403ce4eb14827821491667f28053b960b1",
+        "robin-cornell": "a89e01af17f86d9fba5040db4bce7a0c2adf3055e6c79cf5d5d731915e900080"
+      },
+      "content_sha256": "4c2c74426d74ad14e92b43a08424a8d600eba73c86a04a17018ebf7ada082f64",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:american-robin:environment_role",
+      "organism_id": "taxon:american-robin",
+      "field": "environment_role",
+      "text": "Eats small animals such as worms and insects, as well as fruit.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "robin-smithsonian",
+        "robin-cornell"
+      ],
+      "source_versions": {
+        "robin-smithsonian": "d14ee0ea72ad9a616aa84397806b5e403ce4eb14827821491667f28053b960b1",
+        "robin-cornell": "a89e01af17f86d9fba5040db4bce7a0c2adf3055e6c79cf5d5d731915e900080"
+      },
+      "content_sha256": "69e5b19e23bd14eb33666a693b3e4c46033d2cd68736106ffef646ff7f6c14b5",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:american-robin:physical_dimensions",
+      "organism_id": "taxon:american-robin",
+      "field": "physical_dimensions",
+      "text": "About 8 to 11 inches long.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "robin-smithsonian"
+      ],
+      "source_versions": {
+        "robin-smithsonian": "d14ee0ea72ad9a616aa84397806b5e403ce4eb14827821491667f28053b960b1"
+      },
+      "content_sha256": "0b9a17fbf6a830ba6a358ba0ffe3d20e49e3db0b61a0502cf1173200298710a0",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    },
+    {
+      "id": "taxon:american-robin:notes",
+      "organism_id": "taxon:american-robin",
+      "field": "notes",
+      "text": "Many robins stay in colder places through winter if they can find food.",
+      "kind": "editorial_summary",
+      "source_ids": [
+        "robin-smithsonian"
+      ],
+      "source_versions": {
+        "robin-smithsonian": "d14ee0ea72ad9a616aa84397806b5e403ce4eb14827821491667f28053b960b1"
+      },
+      "content_sha256": "88c93662c43433769dc9d925e61e3c32231f2760420bd8ea81fa2d893755d1bf",
+      "entry_sha256": "38637801f45e45e4607a57fa04952cc198139b033dd575bbcb918e8b420fd89c",
+      "review_status": "source_checked",
+      "reuse_basis": "Original VitaDex factual summary; not copied source prose. Repository license applies to original wording.",
+      "attribution": "VitaDex; based on the linked source records, which retain their own terms."
+    }
+  ]
+}

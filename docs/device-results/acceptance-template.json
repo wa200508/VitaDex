@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "build_sha": "",
+  "apk_sha256": "",
+  "device_model": "",
+  "os_version": "",
+  "tester": "",
+  "tested_on": "",
+  "voice": "",
+  "checks": {
+    "first_introduction": "not_run",
+    "repeat_silence_after_restart": "not_run",
+    "replay": "not_run",
+    "automatic_voice_disabled": "not_run",
+    "stop_reading": "not_run",
+    "pause_resume": "not_run",
+    "device_lock": "not_run",
+    "shutdown": "not_run",
+    "headset_routing": "not_run",
+    "interruption": "not_run",
+    "missing_offline_voice": "not_run",
+    "offline_startup_and_browsing": "not_run"
+  },
+  "evidence_files": [],
+  "notes": "No device results have been supplied. Mocked tests are not a replacement."
+}

@@ -1,0 +1,17 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14",
+  "scope": "desktop SQLite append, not energy or UI frame timing",
+  "results": [
+    {
+      "existing_cards": 10,
+      "append_ms": 0.352,
+      "card_writes": 1
+    },
+    {
+      "existing_cards": 1000,
+      "append_ms": 1.039,
+      "card_writes": 1
+    }
+  ]
+}

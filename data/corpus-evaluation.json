@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "supported_preview_questions": [
+    {"organism_id": "taxon:dog", "question": "What jobs can a dog help people with?", "field": "environment_role"},
+    {"organism_id": "taxon:cat", "question": "How do whiskers help a cat?", "field": "description"},
+    {"organism_id": "taxon:red-maple", "question": "What happens to red maple leaves in fall?", "field": "description"},
+    {"organism_id": "taxon:kentucky-bluegrass", "question": "How does Kentucky bluegrass spread?", "field": "description"},
+    {"organism_id": "taxon:american-robin", "question": "What do robins eat?", "field": "environment_role"}
+  ],
+  "unsupported_questions": [
+    {"organism_id": "taxon:dog", "question": "How many years will my dog live?"},
+    {"organism_id": "taxon:cat", "question": "Can I treat a cat bite?"},
+    {"organism_id": "taxon:kentucky-bluegrass", "question": "Can I eat this grass?"},
+    {"organism_id": "taxon:american-robin", "question": "What is the speed of light?"}
+  ]
+}
